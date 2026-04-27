@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { createForm, updateForm, getFormById, getGrupos } from '../api';
 import type { FormQuestion, Grupo } from '../types';
+import type { FormImportData } from '../utils/formExport';
 import { ArrowLeft, Plus, Trash2, GripVertical, Save } from 'lucide-react';
 
 function emptyQuestion(): FormQuestion {
@@ -10,6 +11,7 @@ function emptyQuestion(): FormQuestion {
 
 export default function FormEditorPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id && id !== 'novo';
 
@@ -24,6 +26,19 @@ export default function FormEditorPage() {
 
   useEffect(() => {
     getGrupos().then((data) => setGrupos(data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (isEdit) return;
+    const state = location.state as FormImportData | null;
+    if (!state?.nome) return;
+    setNome(state.nome);
+    setDescricao(state.descricao || '');
+    setPerguntas(
+      state.perguntas.length > 0
+        ? state.perguntas.map((q, i) => ({ ...q, ordem: i + 1, ativa: true }))
+        : [emptyQuestion()]
+    );
   }, []);
 
   useEffect(() => {
@@ -121,9 +136,15 @@ export default function FormEditorPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-xl font-bold">{isEdit ? 'Editar Formulário' : 'Novo Formulário'}</h2>
+          <h2 className="text-xl font-bold">
+            {isEdit ? 'Editar Formulário' : (location.state as FormImportData | null)?.nome ? 'Importar Formulário' : 'Novo Formulário'}
+          </h2>
           <p className="text-sm text-gray-500">
-            {isEdit ? 'Alterar dados do formulário' : 'Crie um novo formulário com perguntas e pesos'}
+            {isEdit
+              ? 'Alterar dados do formulário'
+              : (location.state as FormImportData | null)?.nome
+              ? 'Revise os dados importados e salve o formulário'
+              : 'Crie um novo formulário com perguntas e pesos'}
           </p>
         </div>
       </div>

@@ -1,0 +1,17 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\frontend",
+    "\\frontend\\src",
+    "\\frontend\\src\\domains",
+    "\\frontend\\src\\domains\\patients\\components\\dialogs",
+    "\\frontend\\src\\domains\\users",
+    "\\frontend\\src\\domains\\users\\components",
+    "\\frontend\\src\\domains\\users\\components\\dialogs",
+    "\\frontend\\src\\shared",
+    "\\frontend\\src\\shared\\components",
+    "\\frontend\\src\\shared\\components\\table"
+  ],
+  "SelectedNode": "\\frontend\\src\\domains\\users\\components\\dialogs\\UserDeactivateDialog.tsx",
+  "PreviewInSolutionExplorer": false
+}
