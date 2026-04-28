@@ -5,10 +5,12 @@ import type { Evaluation } from '@/types';
 import { Eye, Plus } from 'lucide-react';
 import EvaluationCreateDialog from '../components/EvaluationCreateDialog';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function EvaluationsListPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const canCreateEvaluations = useAuthStore((state) => state.canCreateEvaluations);
   const [evals, setEvals] = useState<Evaluation[]>([]);
   const [filter, setFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -19,11 +21,11 @@ export default function EvaluationsListPage() {
 
   useEffect(() => {
     const state = location.state as { openNewEvaluation?: boolean } | null;
-    if (state?.openNewEvaluation) {
+    if (state?.openNewEvaluation && canCreateEvaluations()) {
       setCreateOpen(true);
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate]);
+  }, [canCreateEvaluations, location.pathname, location.state, navigate]);
 
   const filtered = evals.filter((e) =>
     e.patientNome.toLowerCase().includes(filter.toLowerCase())
@@ -78,13 +80,15 @@ export default function EvaluationsListPage() {
           <h2 className="text-xl font-bold">Avaliacoes</h2>
           <p className="text-sm text-gray-500">Historico completo</p>
         </div>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Nova Avaliacao
-        </button>
+        {canCreateEvaluations() && (
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Avaliacao
+          </button>
+        )}
       </div>
 
       <input
@@ -101,7 +105,7 @@ export default function EvaluationsListPage() {
         emptyMessage="Nenhuma avaliação encontrada."
       />
 
-      <EvaluationCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      {canCreateEvaluations() && <EvaluationCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />}
     </div>
   );
 }

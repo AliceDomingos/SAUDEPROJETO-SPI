@@ -48,6 +48,14 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("criado_em")
             .IsRequired();
 
+        builder.Property(x => x.OrganizationId)
+            .HasColumnName("organization_id");
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(x => x.ManagedGroups)
             .WithOne(x => x.Gestor)
             .HasForeignKey(x => x.GestorId)

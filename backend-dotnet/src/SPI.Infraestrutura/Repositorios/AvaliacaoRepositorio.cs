@@ -51,6 +51,21 @@ public sealed class EvaluationRepository : IEvaluationRepository
         return evaluations.Select(Map).ToList();
     }
 
+    public async Task<List<EvaluationDetails>> ListDetailedByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default)
+    {
+        var evaluations = await _context.Evaluations
+            .AsNoTracking()
+            .Include(x => x.Patient)
+            .ThenInclude(x => x.Group)
+            .Include(x => x.Avaliador)
+            .Include(x => x.FormTemplate)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderByDescending(x => x.DataAvaliacao)
+            .ToListAsync(cancellationToken);
+
+        return evaluations.Select(Map).ToList();
+    }
+
     public async Task<EvaluationDetails?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var evaluation = await _context.Evaluations

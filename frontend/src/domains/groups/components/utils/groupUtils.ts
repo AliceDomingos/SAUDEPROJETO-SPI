@@ -18,23 +18,17 @@ export function mapGroupFormToInput(values: GroupFormValues): GroupUpsertInput {
 export function validateGroupForm(
   values: GroupFormValues,
   managers: User[],
-  requireManager: boolean,
+  _requireManager: boolean,
 ): string | null {
   if (!values.nome.trim()) {
     return 'Informe o nome do grupo.';
   }
 
-  if (!requireManager) {
-    return null;
-  }
-
-  if (!values.gestorId) {
-    return 'Selecione um gestor responsavel.';
-  }
-
-  const selectedManagerId = Number(values.gestorId);
-  if (!managers.some((manager) => manager.id === selectedManagerId)) {
-    return 'Selecione um gestor valido.';
+  if (values.gestorId) {
+    const selectedManagerId = Number(values.gestorId);
+    if (!managers.some((manager) => manager.id === selectedManagerId)) {
+      return 'Selecione um gestor valido.';
+    }
   }
 
   return null;

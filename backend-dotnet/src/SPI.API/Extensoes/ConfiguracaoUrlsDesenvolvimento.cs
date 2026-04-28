@@ -1,5 +1,3 @@
-﻿using System.Net.NetworkInformation;
-
 namespace SPI.Api.Extensions;
 
 public sealed class DevelopmentUrlOptions
@@ -20,16 +18,19 @@ public static class DevelopmentUrlConfiguration
             return new DevelopmentUrlOptions();
         }
 
-        var selectedUrls = urls
-            .Select(FindAvailableUrl)
-            .ToArray();
+        if (builder.Environment.IsDevelopment())
+        {
+            DevelopmentPortProcessCleaner.StopProcessesUsingPorts(
+                urls.Select(GetPortFromUrl).Where(x => x.HasValue).Select(x => x!.Value),
+                Console.WriteLine);
+        }
 
-        builder.WebHost.UseUrls(string.Join(';', selectedUrls));
+        builder.WebHost.UseUrls(string.Join(';', urls));
 
         return new DevelopmentUrlOptions
         {
-            HttpUrl = selectedUrls.FirstOrDefault(x => x.StartsWith("http://", StringComparison.OrdinalIgnoreCase)),
-            HttpsUrl = selectedUrls.FirstOrDefault(x => x.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            HttpUrl = urls.FirstOrDefault(x => x.StartsWith("http://", StringComparison.OrdinalIgnoreCase)),
+            HttpsUrl = urls.FirstOrDefault(x => x.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         };
     }
 
@@ -40,35 +41,6 @@ public static class DevelopmentUrlConfiguration
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-    private static string FindAvailableUrl(string url)
-    {
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-        {
-            return url;
-        }
-
-        if (!IsPortOccupied(uri.Port))
-        {
-            return url;
-        }
-
-        for (var port = uri.Port + 1; port <= uri.Port + 100; port++)
-        {
-            if (!IsPortOccupied(port))
-            {
-                var builder = new UriBuilder(uri) { Port = port };
-                return builder.Uri.ToString().TrimEnd('/');
-            }
-        }
-
-        return url;
-    }
-
-    private static bool IsPortOccupied(int port) =>
-        IPGlobalProperties.GetIPGlobalProperties()
-            .GetActiveTcpListeners()
-            .Any(endpoint => endpoint.Port == port);
+    private static int? GetPortFromUrl(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Port : null;
 }
-
-
-

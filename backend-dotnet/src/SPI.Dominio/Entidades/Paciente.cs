@@ -79,9 +79,13 @@ public sealed class Patient : Entity, IAggregateRoot
     public string? Observacoes { get; private set; }
     public int GroupId { get; private set; }
     public DateTime CriadoEm { get; private set; }
+    public int? OrganizationId { get; private set; }
 
     public User? Avaliador { get; private set; }
     public Group Group { get; private set; } = null!;
+    public Organization? Organization { get; private set; }
+
+    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
 
     public IReadOnlyCollection<Evaluation> Avaliacoes => _avaliacoes;
     private readonly List<Evaluation> _avaliacoes = [];

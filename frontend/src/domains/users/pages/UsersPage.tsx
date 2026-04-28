@@ -17,9 +17,18 @@ import UserPasswordInviteDialog from '../components/dialogs/UserPasswordInviteDi
 import type { User } from '@/types';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { formatCreatedAt, formatRole, roleBadgeCls, statusBadgeCls } from '../components/utils/userUtils';
+import type { Group } from '@/domains/groups/types';
+import { getGroups } from '@/domains/groups/api';
+import { useAuthStore } from '@/shared/store/authStore';
+import { isAdminDefaultGroup } from '@/domains/groups/utils/systemGroupRules';
 
 export default function UsersPage() {
+  const isAdmin = useAuthStore((s) => s.isAdmin());
+  const currentRole = useAuthStore((s) => s.user?.role);
+  const isGestor = currentRole === 'gestor';
+  const excludeRolesForCreate: import('@/types').UserRole[] = isGestor ? ['admin', 'analista'] : [];
   const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -37,8 +46,9 @@ export default function UsersPage() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        const data = await getUsers();
-        setUsers(data);
+        const [usersData, groupsData] = await Promise.all([getUsers(), getGroups()]);
+        setUsers(usersData);
+        setGroups(groupsData);
         setError('');
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar usuarios');
@@ -180,9 +190,23 @@ export default function UsersPage() {
         />
       )}
 
-      <UserCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreate} />
+      <UserCreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        groups={isAdmin ? groups.filter((g) => !isAdminDefaultGroup(g)) : groups}
+        singleGroupSelect={true}
+        excludeRoles={excludeRolesForCreate}
+        onSubmit={handleCreate}
+      />
       <UserDetailsDialog user={detailsUser} open={detailsUser !== null} onClose={() => setDetailsUser(null)} />
-      <UserEditDialog user={editUser} open={editUser !== null} onClose={() => setEditUser(null)} onSubmit={handleEdit} />
+      <UserEditDialog
+        user={editUser}
+        open={editUser !== null}
+        onClose={() => setEditUser(null)}
+        onSubmit={handleEdit}
+        groups={groups}
+        isAdmin={isAdmin}
+      />
       <UserPasswordInviteDialog
         user={passwordInviteTarget}
         open={passwordInviteTarget !== null}

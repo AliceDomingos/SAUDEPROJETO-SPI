@@ -14,16 +14,25 @@ import {
 import { useState } from 'react';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/avaliacoes', icon: ClipboardList, label: 'Avaliacoes' },
-  { to: '/formularios', icon: ClipboardCheck, label: 'Formularios' },
-  { to: '/pacientes', icon: Users, label: 'Pacientes' },
-  { to: '/grupos', icon: Layers3, label: 'Grupos', userManagementOnly: true },
-  { to: '/usuarios', icon: UserCog, label: 'Usuarios', userManagementOnly: true },
-];
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard' },
+  { to: '/avaliacoes', icon: ClipboardList, label: 'Avaliacoes', permission: 'canViewEvaluations' },
+  { to: '/formularios', icon: ClipboardCheck, label: 'Formularios', permission: 'canViewForms' },
+  { to: '/pacientes', icon: Users, label: 'Pacientes', permission: 'canViewPatients' },
+  { to: '/grupos', icon: Layers3, label: 'Grupos', permission: 'canManageGroups' },
+  { to: '/usuarios', icon: UserCog, label: 'Usuarios', permission: 'canManageUsers' },
+] as const;
 
 export default function PageLayout() {
-  const { user, logout, canManageUsers } = useAuthStore();
+  const {
+    user,
+    logout,
+    canManageGroups,
+    canManageUsers,
+    canViewDashboard,
+    canViewEvaluations,
+    canViewForms,
+    canViewPatients,
+  } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,9 +42,15 @@ export default function PageLayout() {
     navigate('/login');
   };
 
-  const filteredNav = navItems.filter(
-    (item) => !item.userManagementOnly || canManageUsers()
-  );
+  const permissions = {
+    canManageGroups,
+    canManageUsers,
+    canViewDashboard,
+    canViewEvaluations,
+    canViewForms,
+    canViewPatients,
+  };
+  const filteredNav = navItems.filter((item) => permissions[item.permission]());
 
   return (
     <div className="flex h-screen bg-gray-100">

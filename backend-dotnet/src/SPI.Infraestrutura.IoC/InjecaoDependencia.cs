@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IFormRepository, FormRepository>();
         services.AddScoped<IEvaluationRepository, EvaluationRepository>();
+        services.AddScoped<SPI.Domain.Repositories.IOrganizationRepository, SPI.Infrastructure.Data.Repositories.OrganizationRepository>();
 
         services.AddScoped<PasswordHasherAdapter>();
         services.AddScoped<IPasswordHasher>(provider => provider.GetRequiredService<PasswordHasherAdapter>());

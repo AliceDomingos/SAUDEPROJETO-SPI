@@ -23,7 +23,9 @@ import DataTable, { type Column } from '@/shared/components/table/DataTable';
 
 export default function PatientsPage() {
   const user = useAuthStore((state) => state.user);
+  const canManagePatients = useAuthStore((state) => state.canManagePatients);
   const isAdmin = user?.role === 'admin';
+  const shouldLoadGroups = user?.role === 'admin' || user?.role === 'gestor';
   const [patients, setPatients] = useState<Patient[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +46,10 @@ export default function PatientsPage() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        const [patientsData, groupsData] = await Promise.all([getPatients(), getGroups()]);
+        const [patientsData, groupsData] = await Promise.all([
+          getPatients(),
+          shouldLoadGroups ? getGroups() : Promise.resolve([] as Group[]),
+        ]);
         setPatients(patientsData);
         setGroups(groupsData);
         setError('');
@@ -56,7 +61,7 @@ export default function PatientsPage() {
     };
 
     initialize();
-  }, [isAdmin]);
+  }, [shouldLoadGroups]);
 
   const handleCreate = async (data: CreatePatientInput) => {
     await createPatient(data);
@@ -76,7 +81,7 @@ export default function PatientsPage() {
   const normalizedSearch = search.trim().toLowerCase();
   const defaultCreateGroupId = (() => {
     if ((user?.groupIds?.length ?? 0) === 1) {
-      const userGroupId = user!.groupIds[0];
+      const userGroupId = user!.groupIds![0];
       return groups.some((group) => group.id === userGroupId) ? String(userGroupId) : '';
     }
 
@@ -107,22 +112,26 @@ export default function PatientsPage() {
             <Eye className="h-3.5 w-3.5" />
             Visualizar
           </button>
-          <button
-            type="button"
-            onClick={() => setEditPatient(p)}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Editar
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeletePatientTarget(p)}
-            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Excluir
-          </button>
+          {canManagePatients() && (
+            <>
+              <button
+                type="button"
+                onClick={() => setEditPatient(p)}
+                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeletePatientTarget(p)}
+                className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
+              </button>
+            </>
+          )}
         </div>
       ),
     },
@@ -173,14 +182,16 @@ export default function PatientsPage() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            Novo paciente
-          </button>
+          {canManagePatients() && (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              Novo paciente
+            </button>
+          )}
         </div>
       </div>
 

@@ -101,6 +101,14 @@ public sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
             .HasForeignKey(x => x.GroupId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(x => x.OrganizationId)
+            .HasColumnName("organization_id");
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.GroupId);
         builder.HasIndex(x => x.Cpf).IsUnique();
     }

@@ -34,8 +34,12 @@ public sealed class Group : Entity, IAggregateRoot
     public int GestorId { get; private set; }
     public bool Ativo { get; private set; }
     public DateTime CriadoEm { get; private set; }
+    public int? OrganizationId { get; private set; }
 
     public User Gestor { get; private set; } = null!;
+    public Organization? Organization { get; private set; }
+
+    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
     public IReadOnlyCollection<UserGroupMembership> Members => _members;
     public IReadOnlyCollection<Patient> Patients => _patients;
     public IReadOnlyCollection<FormTemplate> Forms => _forms;

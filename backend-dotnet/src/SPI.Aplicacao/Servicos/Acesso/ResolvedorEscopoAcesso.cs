@@ -23,6 +23,7 @@ internal static class AccessScopeResolver
             user.Role == UserRole.Admin,
             user.Role == UserRole.Analyst,
             user.Role.HasManagerPrivileges(),
+            user.OrganizationId,
             managedGroupIds,
             memberGroupIds);
     }

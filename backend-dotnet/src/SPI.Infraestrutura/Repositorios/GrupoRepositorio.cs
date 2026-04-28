@@ -38,6 +38,15 @@ public sealed class GroupRepository : IGroupRepository
             .ToListAsync(cancellationToken);
     }
 
+    public Task<List<Group>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+        _context.Groups
+            .AsNoTracking()
+            .Include(x => x.Gestor)
+            .Include(x => x.Members)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderBy(x => x.Nome)
+            .ToListAsync(cancellationToken);
+
     public Task<Group?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         _context.Groups.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 

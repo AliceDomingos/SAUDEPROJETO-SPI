@@ -29,7 +29,7 @@ export async function getEvals(): Promise<Evaluation[]> {
   return (await import('@/shared/api/client')).api.get('/api/evaluations').then((r) => r.data);
 }
 
-export async function createEvaluation(data: { patientId: number; respostas: Record<number, number> }) {
+export async function createEvaluation(data: { patientId: number; respostas: Record<number, number>; formId?: number }) {
   if (isMockMode()) {
     await new Promise((r) => setTimeout(r, 600));
     const total = Object.values(data.respostas).reduce((s, v) => s + v, 0);

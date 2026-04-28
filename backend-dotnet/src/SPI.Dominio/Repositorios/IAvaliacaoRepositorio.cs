@@ -7,6 +7,7 @@ public interface IEvaluationRepository
 {
     Task<List<EvaluationDetails>> ListDetailedAsync(CancellationToken cancellationToken = default);
     Task<List<EvaluationDetails>> ListDetailedByGroupIdsAsync(IReadOnlyCollection<int> groupIds, CancellationToken cancellationToken = default);
+    Task<List<EvaluationDetails>> ListDetailedByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default);
     Task<EvaluationDetails?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<bool> AnyByGroupIdAsync(int groupId, CancellationToken cancellationToken = default);
     Task<bool> AnyByPatientIdAsync(int patientId, CancellationToken cancellationToken = default);

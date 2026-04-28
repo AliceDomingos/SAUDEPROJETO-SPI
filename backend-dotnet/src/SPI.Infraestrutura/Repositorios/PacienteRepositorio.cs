@@ -41,6 +41,14 @@ public sealed class PatientRepository : IPatientRepository
             .Include(x => x.Group)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
+    public Task<List<Patient>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+        _context.Patients
+            .AsNoTracking()
+            .Include(x => x.Group)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderBy(x => x.Nome)
+            .ToListAsync(cancellationToken);
+
     public Task AddAsync(Patient patient, CancellationToken cancellationToken = default) =>
         _context.Patients.AddAsync(patient, cancellationToken).AsTask();
 

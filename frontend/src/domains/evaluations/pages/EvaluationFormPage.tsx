@@ -1,48 +1,82 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SPI_QUESTIONS } from '../utils/questions';
 import { calcScore, getClassification } from '../utils/scoring';
-import type { EvaluationAnswers } from '../types';
+import type { EvaluationAnswers, Question } from '../types';
 import QuestionCard from '../components/QuestionCard';
 import { createEvaluation } from '@/domains/dashboard/api';
+import { getForms } from '@/domains/forms/api';
+import type { Formulario } from '@/domains/forms/types';
 
 interface EvaluationFormPageProps {
   embedded?: boolean;
   onCancel?: () => void;
 }
 
-export default function EvaluationFormPage({
-  embedded = false,
-  onCancel,
-}: EvaluationFormPageProps) {
+const DEFAULT_FORM_ID = 0;
+
+export default function EvaluationFormPage({ embedded = false, onCancel }: EvaluationFormPageProps) {
   const navigate = useNavigate();
+
+  const [formularios, setFormularios] = useState<Formulario[]>([]);
+  const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
+  const [formIdToSend, setFormIdToSend] = useState<number | undefined>(undefined);
+
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [existingPatientId, setExistingPatientId] = useState<number | null>(null);
   const [newName, setNewName] = useState('');
-  const [newAge, setNewAge] = useState('');
   const [answers, setAnswers] = useState<EvaluationAnswers>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const total = SPI_QUESTIONS.length;
+  useEffect(() => {
+    getForms().catch(() => []).then(setFormularios);
+  }, []);
+
+  function selectForm(formId: number) {
+    setSelectedFormId(formId);
+    setAnswers({});
+    setError('');
+
+    if (formId === DEFAULT_FORM_ID) {
+      setActiveQuestions(SPI_QUESTIONS);
+      setFormIdToSend(undefined);
+    } else {
+      const form = formularios.find((f) => f.id === formId);
+      if (form) {
+        const questions: Question[] = form.perguntas
+          .sort((a, b) => a.ordem - b.ordem)
+          .map((p, idx) => {
+            const maxScore = Math.max(2, Math.round(p.peso));
+            return {
+              id: p.id ?? idx + 1,
+              name: p.texto,
+              options: Array.from({ length: maxScore }, (_, i) => ({
+                score: i + 1,
+                text: i === 0 ? 'Nao apresenta' : i === maxScore - 1 ? 'Sempre apresenta' : `Nivel ${i + 1}`,
+              })),
+            };
+          });
+        setActiveQuestions(questions);
+        setFormIdToSend(formId);
+      }
+    }
+  }
+
+  const total = activeQuestions.length;
   const answered = Object.keys(answers).length;
   const progress = total > 0 ? (answered / total) * 100 : 0;
-
-  const handleAnswer = (qId: number, score: number) => {
-    setAnswers({ ...answers, [qId]: score });
-  };
 
   const handleSubmit = async () => {
     if (mode === 'existing' && !existingPatientId) {
       setError('Selecione um paciente existente.');
       return;
     }
-
     if (mode === 'new' && !newName.trim()) {
       setError('Informe o nome do paciente.');
       return;
     }
-
     if (answered < total) {
       setError(`Faltam ${total - answered} questao(oes) para responder.`);
       return;
@@ -50,20 +84,13 @@ export default function EvaluationFormPage({
 
     setError('');
     setLoading(true);
-
     try {
       const pid = mode === 'existing' ? existingPatientId! : Date.now();
-      await createEvaluation({ patientId: pid, respostas: answers });
+      await createEvaluation({ patientId: pid, respostas: answers, formId: formIdToSend });
       const score = calcScore(answers);
       const classification = getClassification(score);
-
       navigate('/resultado', {
-        state: {
-          ...classification,
-          patientId: pid,
-          patientNome: mode === 'new' ? newName : undefined,
-          answers,
-        },
+        state: { ...classification, patientId: pid, patientNome: mode === 'new' ? newName : undefined, answers },
       });
     } catch {
       setError('Erro ao salvar avaliacao');
@@ -72,24 +99,91 @@ export default function EvaluationFormPage({
     }
   };
 
-  return (
-    <div className={embedded ? 'space-y-5' : 'mx-auto max-w-3xl space-y-5'}>
-      {embedded ? (
-        <div className="flex items-center justify-end text-sm font-medium text-gray-500">
-          {answered}/{total}
-        </div>
-      ) : (
-        <div className="flex items-center justify-between">
+  // Passo 1 — selecionar formulario
+  if (selectedFormId === null) {
+    return (
+      <div className={embedded ? 'space-y-4' : 'mx-auto max-w-3xl space-y-5'}>
+        {!embedded && (
           <div>
             <h2 className="text-xl font-bold">Nova Avaliacao</h2>
-            <p className="text-sm text-gray-500">Selecione ou cadastre o paciente e responda as 14 questoes</p>
+            <p className="text-sm text-gray-500">Selecione o formulario a ser utilizado</p>
           </div>
-          <div className="text-sm font-medium text-gray-500">
-            {answered}/{total}
-          </div>
-        </div>
-      )}
+        )}
 
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-700">Formulario de avaliacao</h3>
+
+          <button
+            type="button"
+            onClick={() => selectForm(DEFAULT_FORM_ID)}
+            className="w-full rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-400 hover:bg-blue-100"
+          >
+            <p className="text-sm font-semibold text-blue-700">Formulario Padrao</p>
+            <p className="text-xs text-blue-500 mt-0.5">14 questoes — CARS adaptado</p>
+          </button>
+
+          {formularios.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Formularios criados</p>
+              {formularios.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => selectForm(f.id)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50"
+                >
+                  <p className="text-sm font-semibold text-gray-800">{f.nome}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {f.perguntas.length} questoes
+                    {f.groupNome ? ` · ${f.groupNome}` : ''}
+                    {f.descricao ? ` · ${f.descricao}` : ''}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {embedded && onCancel && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Passo 2 — paciente + perguntas juntos
+  return (
+    <div className={embedded ? 'space-y-5' : 'mx-auto max-w-3xl space-y-5'}>
+      {/* Cabecalho */}
+      <div className="flex items-center justify-between">
+        <div>
+          {!embedded && <h2 className="text-xl font-bold">Nova Avaliacao</h2>}
+          <p className="text-sm text-gray-500">
+            {selectedFormId === DEFAULT_FORM_ID
+              ? 'Formulario Padrao'
+              : formularios.find((f) => f.id === selectedFormId)?.nome}
+            {' '}·{' '}
+            <button
+              type="button"
+              onClick={() => { setSelectedFormId(null); setAnswers({}); setError(''); }}
+              className="text-blue-600 hover:underline"
+            >
+              trocar formulario
+            </button>
+          </p>
+        </div>
+        <div className="text-sm font-medium text-gray-500">{answered}/{total}</div>
+      </div>
+
+      {/* Barra de progresso */}
       <div className="h-2 w-full rounded-full bg-gray-200">
         <div
           className="h-2 rounded-full bg-blue-600 transition-all duration-300"
@@ -97,65 +191,45 @@ export default function EvaluationFormPage({
         />
       </div>
 
+      {/* Paciente */}
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5">
         <h3 className="text-sm font-semibold text-gray-700">Paciente</h3>
-
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setMode('existing')}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              mode === 'existing' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === 'existing' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Paciente Existente
           </button>
           <button
             type="button"
             onClick={() => setMode('new')}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              mode === 'new' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === 'new' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Novo Paciente
           </button>
         </div>
-
         {mode === 'existing' ? (
           <ExistingPatientSelector value={existingPatientId} onChange={setExistingPatientId} />
         ) : (
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="mb-1 block text-xs font-medium text-gray-500">Nome *</label>
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nome completo do paciente"
-              />
-            </div>
-            <div className="w-28">
-              <label className="mb-1 block text-xs font-medium text-gray-500">Idade</label>
-              <input
-                type="number"
-                value={newAge}
-                onChange={(e) => setNewAge(e.target.value)}
-                min={0}
-                max={99}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Nome completo do paciente"
+          />
         )}
       </div>
 
+      {/* Perguntas */}
       <div className="space-y-3">
-        {SPI_QUESTIONS.map((q) => (
+        {activeQuestions.map((q) => (
           <QuestionCard
             key={q.id}
             question={q}
             value={answers[q.id] as number | undefined}
-            onChange={(score) => handleAnswer(q.id, score)}
+            onChange={(score) => setAnswers((prev) => ({ ...prev, [q.id]: score }))}
           />
         ))}
       </div>
@@ -172,7 +246,7 @@ export default function EvaluationFormPage({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -190,13 +264,7 @@ export default function EvaluationFormPage({
   );
 }
 
-function ExistingPatientSelector({
-  value,
-  onChange,
-}: {
-  value: number | null;
-  onChange: (id: number) => void;
-}) {
+function ExistingPatientSelector({ value, onChange }: { value: number | null; onChange: (id: number) => void }) {
   const [patients, setPatients] = useState<{ id: number; nome: string; idade: number | null }[]>([]);
   const [show, setShow] = useState(false);
   const [search, setSearch] = useState('');
@@ -205,19 +273,14 @@ function ExistingPatientSelector({
     import('@/domains/patients/api').then(({ getPatients }) => getPatients().then(setPatients));
   }, []);
 
-  const filtered = patients.filter((p) =>
-    p.nome.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = patients.filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()));
   const selected = patients.find((p) => p.id === value);
 
   return (
     <div className="relative">
       <input
         value={selected?.nome || search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setShow(true);
-        }}
+        onChange={(e) => { setSearch(e.target.value); setShow(true); }}
         onFocus={() => setShow(true)}
         onBlur={() => setTimeout(() => setShow(false), 200)}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
@@ -232,16 +295,10 @@ function ExistingPatientSelector({
             <button
               key={p.id}
               type="button"
-              className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 ${
-                p.id === value ? 'bg-blue-50 font-medium text-blue-700' : ''
-              }`}
-              onMouseDown={() => {
-                onChange(p.id);
-                setShow(false);
-                setSearch('');
-              }}
+              className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 ${p.id === value ? 'bg-blue-50 font-medium text-blue-700' : ''}`}
+              onMouseDown={() => { onChange(p.id); setShow(false); setSearch(''); }}
             >
-              {p.nome} - {p.idade || '?'} anos
+              {p.nome}{p.idade ? ` — ${p.idade} anos` : ''}
             </button>
           ))}
         </div>
@@ -249,6 +306,3 @@ function ExistingPatientSelector({
     </div>
   );
 }
-
-
-

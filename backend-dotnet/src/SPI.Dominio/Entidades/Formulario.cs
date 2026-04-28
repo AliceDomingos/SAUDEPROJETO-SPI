@@ -45,9 +45,13 @@ public sealed class FormTemplate : Entity, IAggregateRoot
     public bool Ativo { get; private set; }
     public DateTime CriadoEm { get; private set; }
     public DateTime AtualizadoEm { get; private set; }
+    public int? OrganizationId { get; private set; }
 
     public Group? Group { get; private set; }
     public User CriadoPorUsuario { get; private set; } = null!;
+    public Organization? Organization { get; private set; }
+
+    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
     public IReadOnlyCollection<FormQuestion> Questions => _questions;
     public decimal PesoTotal => _questions.Sum(x => x.Peso);
 

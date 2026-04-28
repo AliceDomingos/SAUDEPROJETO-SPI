@@ -7,8 +7,9 @@ export interface User {
   email: string;
   role: UserRole;
   ativo: boolean;
-  groupIds: number[];
-  groupNames: string[];
+  podeAvaliar?: boolean;
+  groupIds?: number[];
+  groupNames?: string[];
   criado_em: string;
 }
 

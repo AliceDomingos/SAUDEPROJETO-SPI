@@ -6,12 +6,14 @@ export interface CreateUserInput {
   nome: string;
   email: string;
   role: UserRole;
+  groupIds?: number[];
 }
 
 export interface UpdateUserInput {
   nome: string;
   email: string;
   role: UserRole;
+  groupIds?: number[];
 }
 
 export async function getUsers() {
@@ -32,7 +34,7 @@ export async function createUser(data: CreateUserInput) {
       email: data.email,
       role: data.role,
       ativo: true,
-      groupIds: [],
+      groupIds: data.groupIds ?? [],
       groupNames: [],
       criado_em: new Date().toISOString(),
     } satisfies User;
@@ -53,10 +55,15 @@ export async function updateUser(id: number, data: UpdateUserInput) {
     user.nome = data.nome;
     user.email = data.email;
     user.role = data.role;
+    if (data.groupIds !== undefined) {
+      user.groupIds = data.groupIds;
+    }
     return user;
   }
 
-  throw new Error('Edicao de usuario ainda nao esta disponivel neste ambiente.');
+  if (data.groupIds !== undefined) {
+    await api.put(`/api/users/${id}/groups`, { groupIds: data.groupIds });
+  }
 }
 
 export async function deactivateUser(id: number) {

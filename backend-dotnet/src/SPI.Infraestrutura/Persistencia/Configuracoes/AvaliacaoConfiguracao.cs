@@ -80,6 +80,14 @@ public sealed class EvaluationConfiguration : IEntityTypeConfiguration<Evaluatio
             .HasForeignKey(x => x.FormTemplateId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(x => x.OrganizationId)
+            .HasColumnName("organization_id");
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.PatientId);
         builder.HasIndex(x => x.AvaliadorId);
         builder.HasIndex(x => x.GroupId);

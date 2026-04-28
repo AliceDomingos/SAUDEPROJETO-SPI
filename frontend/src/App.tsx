@@ -16,28 +16,35 @@ import FormEditorPage from '@/domains/forms/pages/FormEditorPage';
 import GroupsPage from '@/domains/groups/pages/GroupsPage';
 
 function Private() {
-  const user = useAuthStore((s) => s.user);
+  const canViewDashboard = useAuthStore((s) => s.canViewDashboard);
+  const canViewPatients = useAuthStore((s) => s.canViewPatients);
+  const canManageForms = useAuthStore((s) => s.canManageForms);
+  const canViewEvaluations = useAuthStore((s) => s.canViewEvaluations);
+  const canCreateEvaluations = useAuthStore((s) => s.canCreateEvaluations);
+  const canViewForms = useAuthStore((s) => s.canViewForms);
+  const canManageGroups = useAuthStore((s) => s.canManageGroups);
   const canManageUsers = useAuthStore((s) => s.canManageUsers);
+  const defaultPath = canViewDashboard()
+    ? '/'
+    : canViewEvaluations()
+      ? '/avaliacoes'
+      : '/formularios';
 
   return (
     <Routes>
       <Route path="/" element={<PageLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="avaliacoes" element={<EvaluationsListPage />} />
-        <Route path="pacientes" element={<PatientsPage />} />
-        <Route path="nova-avaliacao" element={<EvaluationFormPage />} />
-        <Route path="resultado" element={<EvaluationResultPage />} />
-        <Route path="avaliacoes/:id" element={<EvaluationDetailPage />} />
-        <Route path="formularios" element={<FormsListPage />} />
-        {user && canManageUsers() && (
-          <>
-            <Route path="formularios/novo" element={<FormEditorPage />} />
-            <Route path="formularios/:id" element={<FormEditorPage />} />
-            <Route path="grupos" element={<GroupsPage />} />
-            <Route path="usuarios" element={<UsersPage />} />
-          </>
-        )}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route index element={canViewDashboard() ? <DashboardPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="avaliacoes" element={canViewEvaluations() ? <EvaluationsListPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="pacientes" element={canViewPatients() ? <PatientsPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="nova-avaliacao" element={canCreateEvaluations() ? <EvaluationFormPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="resultado" element={canViewEvaluations() ? <EvaluationResultPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="avaliacoes/:id" element={canViewEvaluations() ? <EvaluationDetailPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="formularios" element={canViewForms() ? <FormsListPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="formularios/novo" element={canManageForms() ? <FormEditorPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="formularios/:id" element={canManageForms() ? <FormEditorPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="grupos" element={canManageGroups() ? <GroupsPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="usuarios" element={canManageUsers() ? <UsersPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="*" element={<Navigate to={defaultPath} replace />} />
       </Route>
     </Routes>
   );

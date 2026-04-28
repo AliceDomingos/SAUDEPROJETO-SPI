@@ -5,8 +5,6 @@ using SPI.Application.Services.Access;
 using SPI.Domain.Enums;
 using SPI.Domain.Repositories;
 
-using SPI.Application.Config;
-
 namespace SPI.Application.Services;
 
 public sealed class GroupsAppService : IGroupsAppService
@@ -38,10 +36,19 @@ public sealed class GroupsAppService : IGroupsAppService
             throw new UnauthorizedAccessException("Usuario sem permissao para acessar grupos.");
         }
 
-        var accessScope = AccessScopeResolver.Resolve(actor);
-        var groups = actor.Role == UserRole.Admin
-            ? await _groupRepository.ListAsync(cancellationToken)
-            : await _groupRepository.ListByIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+        List<SPI.Domain.Entities.Group> groups;
+        if (actor.Role == UserRole.Admin)
+        {
+            var accessScope = AccessScopeResolver.Resolve(actor);
+            groups = accessScope.OrganizationId.HasValue
+                ? await _groupRepository.ListByOrganizationIdAsync(accessScope.OrganizationId.Value, cancellationToken)
+                : await _groupRepository.ListAsync(cancellationToken);
+        }
+        else
+        {
+            var accessScope = AccessScopeResolver.Resolve(actor);
+            groups = await _groupRepository.ListByIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+        }
 
         return groups.Select(x => x.ToDto()).ToList();
     }
@@ -58,19 +65,33 @@ public sealed class GroupsAppService : IGroupsAppService
 
         var gestorId = actor.Role.HasManagerPrivileges()
             ? actor.Id
-            : request.GestorId ?? throw new InvalidOperationException("GestorId precisa ser informado.");
+            : request.GestorId;
 
-        var gestor = await _userRepository.GetByIdAsync(gestorId, cancellationToken)
-            ?? throw new KeyNotFoundException("Responsavel pelo grupo nao encontrado.");
-
-        if (!gestor.Role.HasManagerPrivileges())
+        int resolvedGestorId;
+        if (gestorId.HasValue)
         {
-            throw new InvalidOperationException("O responsavel informado precisa ter perfil de gestor.");
+            var gestor = await _userRepository.GetByIdAsync(gestorId.Value, cancellationToken)
+                ?? throw new KeyNotFoundException("Responsavel pelo grupo nao encontrado.");
+
+            if (!gestor.Role.HasManagerPrivileges())
+            {
+                throw new InvalidOperationException("O responsavel informado precisa ter perfil de gestor.");
+            }
+
+            resolvedGestorId = gestor.Id;
+        }
+        else
+        {
+            resolvedGestorId = actor.Id;
         }
 
-        SystemGroupRules.EnsureNameIsAvailable(request.Nome);
+        var group = new SPI.Domain.Entities.Group(request.Nome, resolvedGestorId);
 
-        var group = new SPI.Domain.Entities.Group(request.Nome, gestor.Id);
+        if (actor.Role == UserRole.Admin && actor.OrganizationId.HasValue)
+        {
+            group.AssignOrganization(actor.OrganizationId.Value);
+        }
+
         await _groupRepository.AddAsync(group, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -93,32 +114,34 @@ public sealed class GroupsAppService : IGroupsAppService
         var group = await _groupRepository.GetByIdAsync(groupId, cancellationToken)
             ?? throw new KeyNotFoundException("Grupo nao encontrado.");
 
-        SystemGroupRules.EnsureGroupCanBeManaged(group);
-
         if (actor.Role.HasManagerPrivileges() && group.GestorId != actor.Id)
         {
             throw new UnauthorizedAccessException("Perfil de gestao so pode alterar o proprio grupo.");
         }
 
-        var gestorId = actor.Role.HasManagerPrivileges() ? actor.Id : request.GestorId;
-        var gestor = await _userRepository.GetByIdAsync(gestorId, cancellationToken)
-            ?? throw new KeyNotFoundException("Responsavel pelo grupo nao encontrado.");
-
-        if (!gestor.Role.HasManagerPrivileges())
+        int resolvedGestorId;
+        if (actor.Role.HasManagerPrivileges())
         {
-            throw new InvalidOperationException("O responsavel informado precisa ter perfil de gestor.");
+            resolvedGestorId = actor.Id;
+        }
+        else if (request.GestorId.HasValue)
+        {
+            var gestor = await _userRepository.GetByIdAsync(request.GestorId.Value, cancellationToken)
+                ?? throw new KeyNotFoundException("Responsavel pelo grupo nao encontrado.");
+
+            if (!gestor.Role.HasManagerPrivileges())
+            {
+                throw new InvalidOperationException("O responsavel informado precisa ter perfil de gestor.");
+            }
+
+            resolvedGestorId = gestor.Id;
+        }
+        else
+        {
+            resolvedGestorId = group.GestorId;
         }
 
-        var adminUser = await _userRepository
-            .GetByEmailAsync("admin@spi.com", cancellationToken);
-        if (adminUser is not null)
-        {
-            SystemGroupRules.EnsureManagerRemainsAdminForProtectedGroup(group, gestor.Id, adminUser.Id);
-        }
-
-        SystemGroupRules.EnsureNameIsAvailable(request.Nome);
-
-        group.Update(request.Nome, gestor.Id);
+        group.Update(request.Nome, resolvedGestorId);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await _groupRepository.GetDetailedByIdAsync(group.Id, cancellationToken)
@@ -139,8 +162,6 @@ public sealed class GroupsAppService : IGroupsAppService
 
         var group = await _groupRepository.GetDetailedByIdAsync(groupId, cancellationToken)
             ?? throw new KeyNotFoundException("Grupo nao encontrado.");
-
-        SystemGroupRules.EnsureGroupCanBeDeleted(group);
 
         if (actor.Role.HasManagerPrivileges() && group.GestorId != actor.Id)
         {
@@ -163,6 +184,15 @@ public sealed class GroupsAppService : IGroupsAppService
         }
 
         _groupRepository.Remove(group);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AssignManagerAsync(int groupId, int managerId, CancellationToken cancellationToken = default)
+    {
+        var group = await _groupRepository.GetByIdAsync(groupId, cancellationToken)
+            ?? throw new KeyNotFoundException("Grupo nao encontrado.");
+
+        group.Update(group.Nome, managerId);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

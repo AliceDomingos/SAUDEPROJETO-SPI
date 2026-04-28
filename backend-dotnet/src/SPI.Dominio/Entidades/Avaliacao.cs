@@ -98,11 +98,15 @@ public sealed class Evaluation : Entity, IAggregateRoot
     public decimal PesoTotal { get; private set; }
     public string Classificacao { get; private set; } = string.Empty;
     public DateTime DataAvaliacao { get; private set; }
+    public int? OrganizationId { get; private set; }
 
     public Patient Patient { get; private set; } = null!;
     public User Avaliador { get; private set; } = null!;
     public Group Group { get; private set; } = null!;
     public FormTemplate? FormTemplate { get; private set; }
+    public Organization? Organization { get; private set; }
+
+    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
 }
 
 

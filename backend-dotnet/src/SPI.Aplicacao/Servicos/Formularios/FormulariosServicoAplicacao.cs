@@ -31,15 +31,25 @@ public sealed class FormsAppService : IFormsAppService
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
 
-        if (!actor.Role.CanAccessOperationalModules())
+        if (!actor.Role.CanViewForms())
         {
             throw new UnauthorizedAccessException("Usuario sem permissao para acessar formularios.");
         }
 
         var accessScope = AccessScopeResolver.Resolve(actor);
-        var forms = actor.Role == UserRole.Admin
-            ? await _formRepository.ListAsync(cancellationToken)
-            : await _formRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+        List<SPI.Domain.Entities.FormTemplate> forms;
+        if (actor.Role == UserRole.Analyst)
+        {
+            forms = await _formRepository.ListAsync(cancellationToken);
+        }
+        else if (accessScope.IsAdmin && accessScope.OrganizationId.HasValue)
+        {
+            forms = await _formRepository.ListByOrganizationIdAsync(accessScope.OrganizationId.Value, cancellationToken);
+        }
+        else
+        {
+            forms = await _formRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+        }
 
         return forms.Select(x => x.ToDto()).ToList();
     }
@@ -49,7 +59,7 @@ public sealed class FormsAppService : IFormsAppService
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
 
-        if (!actor.Role.CanAccessOperationalModules())
+        if (!actor.Role.CanViewForms())
         {
             throw new UnauthorizedAccessException("Usuario sem permissao para acessar formularios.");
         }
@@ -89,6 +99,11 @@ public sealed class FormsAppService : IFormsAppService
             actor.Id,
             request.GroupId,
             request.Perguntas.Select(x => (x.Texto, x.Peso, x.Ordem)));
+
+        if (actor.Role == UserRole.Admin && actor.OrganizationId.HasValue)
+        {
+            form.AssignOrganization(actor.OrganizationId.Value);
+        }
 
         await _formRepository.AddAsync(form, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -138,7 +153,7 @@ public sealed class FormsAppService : IFormsAppService
 
     private static void ValidateFormGroupAccess(UserRole role, int? groupId, AccessScope accessScope)
     {
-        if (role == UserRole.Admin)
+        if (accessScope.IsAdmin)
         {
             return;
         }
@@ -148,15 +163,19 @@ public sealed class FormsAppService : IFormsAppService
             throw new UnauthorizedAccessException("Somente administradores podem criar formularios globais.");
         }
 
-        if (!accessScope.ManagedGroupIds.Contains(groupId.Value))
+        var allowedGroupIds = role.HasManagerPrivileges()
+            ? accessScope.ManagedGroupIds
+            : accessScope.OperationalGroupIds;
+
+        if (!allowedGroupIds.Contains(groupId.Value))
         {
-            throw new UnauthorizedAccessException("Perfil de gestao so pode criar ou alterar formularios do proprio grupo.");
+            throw new UnauthorizedAccessException("Usuario sem permissao para criar ou alterar formularios deste grupo.");
         }
     }
 
     private static void EnsureCanAccessForm(SPI.Domain.Entities.User actor, int? groupId)
     {
-        if (actor.Role == UserRole.Admin || groupId is null)
+        if (actor.Role == UserRole.Analyst || actor.Role == UserRole.Admin || groupId is null)
         {
             return;
         }

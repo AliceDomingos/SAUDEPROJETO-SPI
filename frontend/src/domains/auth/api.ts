@@ -2,6 +2,9 @@ import axios from 'axios';
 import { isMockMode, api, getApiUrlCandidates, setApiBaseUrl } from '@/shared/api/client';
 import type { LoginRequest, SetPasswordFromInviteRequest, TokenResponse } from './types';
 
+const INVALID_CREDENTIALS_MESSAGE =
+  'Infelizmente, nao foi possivel fazer login com esse usuario. As credenciais devem estar incorretas.';
+
 function normalizeLoginResponse(payload: unknown): TokenResponse {
   const res = payload as Record<string, unknown>;
   const rawUser = (res.user ?? res.User ?? {}) as Record<string, unknown>;
@@ -28,6 +31,10 @@ function toAuthError(error: unknown) {
 
   const detail = error.response?.data?.detail?.trim();
   if (detail) {
+    if (detail.toLowerCase().includes('credenciais')) {
+      return new Error(INVALID_CREDENTIALS_MESSAGE);
+    }
+
     return new Error(detail);
   }
 
@@ -56,7 +63,7 @@ export async function loginReq(data: LoginRequest): Promise<TokenResponse> {
         },
       };
     }
-    throw new Error('Credenciais inválidas');
+    throw new Error(INVALID_CREDENTIALS_MESSAGE);
   }
 
   try {

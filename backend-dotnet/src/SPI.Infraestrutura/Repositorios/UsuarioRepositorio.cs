@@ -42,6 +42,16 @@ public sealed class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public Task<List<User>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+        _context.Users
+            .AsNoTracking()
+            .Include(x => x.GroupMemberships)
+            .ThenInclude(x => x.Group)
+            .Include(x => x.ManagedGroups)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderBy(x => x.Nome)
+            .ToListAsync(cancellationToken);
+
     public Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 

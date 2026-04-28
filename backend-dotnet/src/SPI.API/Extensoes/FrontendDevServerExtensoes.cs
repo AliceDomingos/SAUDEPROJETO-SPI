@@ -38,12 +38,15 @@ public static class FrontendDevServerExtensions
         var developmentUrlOptions = app.Services.GetRequiredService<DevelopmentUrlOptions>();
         var portFilePath = Path.Combine(frontendPath, ".vite-port");
         var frontendPort = ResolveFrontendPort(portFilePath);
-        var frontendUrl = $"http://127.0.0.1:{frontendPort}";
+        var frontendUrl = $"http://localhost:{frontendPort}";
+
+        DevelopmentPortProcessCleaner.StopProcessesUsingPorts(
+            [frontendPort],
+            message => app.Logger.LogInformation("{Message}", message));
 
         if (IsPortOccupied(frontendPort))
         {
-            app.Logger.LogInformation("Frontend ja esta em execucao em {FrontendUrl}.", frontendUrl);
-            OpenBrowser(app.Logger, frontendUrl);
+            app.Logger.LogWarning("A porta fixa do frontend ({FrontendPort}) ainda esta ocupada.", frontendPort);
             return;
         }
 
@@ -65,7 +68,7 @@ public static class FrontendDevServerExtensions
                 ? new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
-                    Arguments = $"/c npm run dev -- --host 127.0.0.1 --port {frontendPort}",
+                    Arguments = $"/c npx vite --host localhost --port {frontendPort}",
                     WorkingDirectory = frontendPath,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -75,7 +78,7 @@ public static class FrontendDevServerExtensions
                 : new ProcessStartInfo
                 {
                     FileName = "/bin/sh",
-                    Arguments = $"-lc \"npm run dev -- --host 127.0.0.1 --port {frontendPort}\"",
+                    Arguments = $"-lc \"npx vite --host localhost --port {frontendPort}\"",
                     WorkingDirectory = frontendPath,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -178,27 +181,10 @@ public static class FrontendDevServerExtensions
     {
         if (File.Exists(portFilePath))
         {
-            var content = File.ReadAllText(portFilePath).Trim();
-            if (int.TryParse(content, out var savedPort) && !IsPortOccupied(savedPort))
-            {
-                return savedPort;
-            }
+            File.Delete(portFilePath);
         }
 
-        return FindAvailablePort(PreferredFrontendPort);
-    }
-
-    private static int FindAvailablePort(int preferredPort)
-    {
-        for (var port = preferredPort; port <= preferredPort + 100; port++)
-        {
-            if (!IsPortOccupied(port))
-            {
-                return port;
-            }
-        }
-
-        return preferredPort;
+        return PreferredFrontendPort;
     }
 
     private static bool IsPortOccupied(int port) =>

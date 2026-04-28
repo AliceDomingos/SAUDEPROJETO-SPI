@@ -32,6 +32,14 @@ public sealed class GroupConfiguration : IEntityTypeConfiguration<Group>
             .IsRequired();
 
         builder.HasIndex(x => x.GestorId);
+
+        builder.Property(x => x.OrganizationId)
+            .HasColumnName("organization_id");
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

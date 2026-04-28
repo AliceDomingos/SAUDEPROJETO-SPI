@@ -7,6 +7,14 @@ interface AuthState {
   setAuth: (user: User, token: string) => void;
   logout: () => void;
   isAdmin: () => boolean;
+  canViewDashboard: () => boolean;
+  canViewPatients: () => boolean;
+  canManagePatients: () => boolean;
+  canViewEvaluations: () => boolean;
+  canCreateEvaluations: () => boolean;
+  canViewForms: () => boolean;
+  canManageForms: () => boolean;
+  canManageGroups: () => boolean;
   canManageUsers: () => boolean;
 }
 
@@ -30,6 +38,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, token: null });
   },
   isAdmin: () => get().user?.role === 'admin',
+  canViewDashboard: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'analista' || role === 'gestor';
+  },
+  canViewPatients: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canManagePatients: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canViewEvaluations: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canCreateEvaluations: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canViewForms: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'analista' || role === 'gestor' || role === 'agente_saude';
+  },
+  canManageForms: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canManageGroups: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor';
+  },
   canManageUsers: () => {
     const role = get().user?.role;
     return role === 'admin' || role === 'gestor';

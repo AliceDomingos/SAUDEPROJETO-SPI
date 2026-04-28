@@ -3,6 +3,7 @@ import { createForm, getGrupos } from '../api';
 import type { FormQuestion, Grupo } from '../types';
 import { Plus, Trash2, Save } from 'lucide-react';
 import Dialog from '@/shared/components/dialog/Dialog';
+import { useAuthStore } from '@/shared/store/authStore';
 
 function emptyQuestion(): FormQuestion {
   return { texto: '', peso: 1, ordem: 1, ativa: true };
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function FormCreateDialog({ isOpen, onClose, onCreated }: Props) {
+  const isAdmin = useAuthStore((s) => s.isAdmin());
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [groupId, setGroupId] = useState<number | ''>('');
@@ -25,7 +27,12 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated }: Props) 
 
   useEffect(() => {
     if (!isOpen) return;
-    getGrupos().then(setGrupos).catch(() => {});
+    getGrupos().then((lista) => {
+      setGrupos(lista);
+      if (!isAdmin && lista.length === 1) {
+        setGroupId(lista[0].id);
+      }
+    }).catch(() => {});
   }, [isOpen]);
 
   useEffect(() => {
@@ -166,16 +173,26 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated }: Props) 
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Grupo</label>
-            <select
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value ? Number(e.target.value) : '')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-            >
-              <option value="">Todos os grupos</option>
-              {grupos.map((g) => (
-                <option key={g.id} value={g.id}>{g.nome}</option>
-              ))}
-            </select>
+            {!isAdmin && grupos.length === 1 ? (
+              <input
+                value={grupos[0].nome}
+                disabled
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-sm text-gray-600 cursor-not-allowed"
+              />
+            ) : (
+              <select
+                value={groupId}
+                onChange={(e) => setGroupId(e.target.value ? Number(e.target.value) : '')}
+                required={!isAdmin}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+              >
+                {isAdmin && <option value="">Todos os grupos</option>}
+                {!isAdmin && <option value="">Selecione um grupo</option>}
+                {grupos.map((g) => (
+                  <option key={g.id} value={g.id}>{g.nome}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 

@@ -3,38 +3,50 @@ import Dialog from '@/shared/components/dialog/Dialog';
 import type { User } from '@/types';
 import type { UpdateUserInput } from '../../api';
 import UserFormFields, { type UserFormValues } from '../forms/UserFormFields';
+import type { Group } from '@/domains/groups/types';
+import { isAdminDefaultGroup } from '@/domains/groups/utils/systemGroupRules';
 
 interface UserEditDialogProps {
   user: User | null;
   open: boolean;
   onClose: () => void;
   onSubmit: (userId: number, data: UpdateUserInput) => Promise<void>;
+  groups?: Group[];
+  isAdmin?: boolean;
 }
 
-function buildInitialValues(user: User | null): UserFormValues {
+function buildInitialValues(user: User | null, selectableGroups: Group[]): UserFormValues {
+  const selectableIds = new Set(selectableGroups.map((g) => g.id));
+  const selectedGroupId = (user?.groupIds ?? []).find((id) => selectableIds.has(id));
   return {
     nome: user?.nome ?? '',
     email: user?.email ?? '',
     confirmEmail: user?.email ?? '',
     role: user?.role ?? 'agente_saude',
+    groupIds: selectedGroupId ? [selectedGroupId] : [],
   };
 }
 
-export default function UserEditDialog({ user, open, onClose, onSubmit }: UserEditDialogProps) {
-  const [values, setValues] = useState<UserFormValues>(buildInitialValues(user));
+export default function UserEditDialog({ user, open, onClose, onSubmit, groups = [], isAdmin = false }: UserEditDialogProps) {
+  const selectableGroups = isAdmin ? groups.filter((g) => !isAdminDefaultGroup(g)) : groups;
+  const [values, setValues] = useState<UserFormValues>(buildInitialValues(user, selectableGroups));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setValues(buildInitialValues(user));
+      setValues(buildInitialValues(user, selectableGroups));
       setLoading(false);
       setError('');
     }
   }, [open, user]);
 
-  const handleChange = (field: keyof UserFormValues, value: string) => {
+  const handleChange = (field: Exclude<keyof UserFormValues, 'groupIds'>, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleGroupIdsChange = (groupIds: number[]) => {
+    setValues((current) => ({ ...current, groupIds }));
   };
 
   const handleSubmit = async (event: { preventDefault: () => void }) => {
@@ -59,6 +71,7 @@ export default function UserEditDialog({ user, open, onClose, onSubmit }: UserEd
         nome: values.nome.trim(),
         email,
         role: values.role,
+        groupIds: selectableGroups.length > 0 ? values.groupIds : undefined,
       });
       onClose();
     } catch (err: unknown) {
@@ -101,6 +114,9 @@ export default function UserEditDialog({ user, open, onClose, onSubmit }: UserEd
         <UserFormFields
           values={values}
           onChange={handleChange}
+          onGroupIdsChange={handleGroupIdsChange}
+          groups={selectableGroups}
+          singleGroupSelect={isAdmin}
           disabled={loading}
           emailHint="Confirme o e-mail para salvar a alteracao."
         />

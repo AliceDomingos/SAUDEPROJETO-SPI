@@ -34,14 +34,14 @@ export default function GroupFormFields({
 
       {showManagerField && (
         <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium">Gestor responsavel</label>
+          <label className="mb-1 block text-sm font-medium">Gestor responsavel <span className="text-gray-400 font-normal">(opcional)</span></label>
           <select
             value={values.gestorId}
             onChange={(event) => onChange('gestorId', event.target.value)}
             disabled={disabled}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
           >
-            <option value="">Selecione um gestor</option>
+            <option value="">Sem gestor por enquanto</option>
             {managers.map((manager) => (
               <option key={manager.id} value={String(manager.id)}>
                 {manager.nome}

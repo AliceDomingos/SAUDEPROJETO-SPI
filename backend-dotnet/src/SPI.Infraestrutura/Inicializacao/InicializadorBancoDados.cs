@@ -1,7 +1,6 @@
 ﻿using SPI.Domain.Entities;
 using SPI.Domain.Enums;
 using SPI.Domain.ValueObjects;
-using SPI.Application.Config;
 using SPI.Infrastructure.Data.Persistence;
 using SPI.Infrastructure.Data.Security;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +25,7 @@ public static class DatabaseInitializer
         {
             await context.Database.EnsureCreatedAsync(cancellationToken);
             await EnsureSqlitePatientColumnsAsync(context, cancellationToken);
+            await EnsureSqliteOrganizationColumnsAsync(context, cancellationToken);
         }
         else if (databaseInitializationOptions.ApplyMigrationsOnStartup)
         {
@@ -51,7 +51,7 @@ public static class DatabaseInitializer
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        await EnsureSeedAdminGroupAsync(context, admin, cancellationToken);
+        await EnsureSeedAdminOrganizationAsync(context, admin, cancellationToken);
     }
 
     private static async Task EnsureSqlitePatientColumnsAsync(AppDbContext context, CancellationToken cancellationToken)
@@ -120,27 +120,60 @@ public static class DatabaseInitializer
         }
     }
 
-    private static async Task EnsureSeedAdminGroupAsync(
+    private static async Task EnsureSqliteOrganizationColumnsAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        var tables = new[]
+        {
+            ("users", "organization_id", "ALTER TABLE users ADD COLUMN organization_id INTEGER NULL;"),
+            ("groups", "organization_id", "ALTER TABLE groups ADD COLUMN organization_id INTEGER NULL;"),
+            ("patients", "organization_id", "ALTER TABLE patients ADD COLUMN organization_id INTEGER NULL;"),
+            ("evaluations", "organization_id", "ALTER TABLE evaluations ADD COLUMN organization_id INTEGER NULL;"),
+            ("form_templates", "organization_id", "ALTER TABLE form_templates ADD COLUMN organization_id INTEGER NULL;"),
+        };
+
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        foreach (var (table, column, sql) in tables)
+        {
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = $"PRAGMA table_info('{table}');";
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                columns.Add(reader.GetString(1));
+            }
+            await reader.CloseAsync();
+
+            if (!columns.Contains(column))
+            {
+                await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            }
+        }
+    }
+
+    private static async Task EnsureSeedAdminOrganizationAsync(
         AppDbContext context,
         User admin,
         CancellationToken cancellationToken)
     {
-        var adminGroup = await context.Groups
-            .FirstOrDefaultAsync(x => x.GestorId == admin.Id, cancellationToken);
+        var org = await context.Organizations
+            .FirstOrDefaultAsync(x => x.AdminId == admin.Id, cancellationToken);
 
-        if (adminGroup is null)
+        if (org is null)
         {
-            adminGroup = new Group(SystemGroupRules.AdminDefaultGroupName, admin.Id);
-            context.Groups.Add(adminGroup);
+            org = new Organization("Organizacao Principal", admin.Id);
+            context.Organizations.Add(org);
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        var hasMembership = await context.UserGroupMemberships
-            .AnyAsync(x => x.UserId == admin.Id && x.GroupId == adminGroup.Id, cancellationToken);
-
-        if (!hasMembership)
+        if (admin.OrganizationId != org.Id)
         {
-            context.UserGroupMemberships.Add(new UserGroupMembership(admin.Id, adminGroup.Id));
+            admin.AssignOrganization(org.Id);
             await context.SaveChangesAsync(cancellationToken);
         }
     }

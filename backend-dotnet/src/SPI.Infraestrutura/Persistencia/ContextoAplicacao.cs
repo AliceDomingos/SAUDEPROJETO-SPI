@@ -10,6 +10,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     {
     }
 
+    public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Group> Groups => Set<Group>();
     public DbSet<UserGroupMembership> UserGroupMemberships => Set<UserGroupMembership>();

@@ -56,13 +56,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
-    options.AddPolicy("DashboardAccess", policy => policy.RequireRole("admin", "analista", "agente_saude", "gestor"));
+    options.AddPolicy("DashboardAccess", policy => policy.RequireRole("admin", "analista", "gestor"));
     options.AddPolicy("UserManagement", policy => policy.RequireRole("admin", "gestor"));
     options.AddPolicy("PatientAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
     options.AddPolicy("EvaluationAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
     options.AddPolicy("EvaluationManagement", policy => policy.RequireRole("admin", "gestor"));
-    options.AddPolicy("FormAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
-    options.AddPolicy("FormManagement", policy => policy.RequireRole("admin", "gestor"));
+    options.AddPolicy("FormAccess", policy => policy.RequireRole("admin", "analista", "agente_saude", "gestor"));
+    options.AddPolicy("FormManagement", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
     options.AddPolicy("GroupAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
     options.AddPolicy("GroupManagement", policy => policy.RequireRole("admin", "gestor"));
 });

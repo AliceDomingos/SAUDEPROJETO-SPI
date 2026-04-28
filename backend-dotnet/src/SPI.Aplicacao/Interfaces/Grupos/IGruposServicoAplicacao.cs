@@ -8,6 +8,7 @@ public interface IGroupsAppService
     Task<GroupResponseDto> CreateAsync(CreateGroupRequestDto request, int actorUserId, CancellationToken cancellationToken = default);
     Task<GroupResponseDto> UpdateAsync(int groupId, UpdateGroupRequestDto request, int actorUserId, CancellationToken cancellationToken = default);
     Task DeleteAsync(int groupId, int actorUserId, CancellationToken cancellationToken = default);
+    Task AssignManagerAsync(int groupId, int managerId, CancellationToken cancellationToken = default);
 }
 
 

@@ -33,6 +33,16 @@ public sealed class FormRepository : IFormRepository
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
+    public Task<List<FormTemplate>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+        _context.FormTemplates
+            .AsNoTracking()
+            .Include(x => x.Group)
+            .Include(x => x.CriadoPorUsuario)
+            .Include(x => x.Questions)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderBy(x => x.Nome)
+            .ToListAsync(cancellationToken);
+
     public Task<FormTemplate?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         _context.FormTemplates
             .Include(x => x.Questions)

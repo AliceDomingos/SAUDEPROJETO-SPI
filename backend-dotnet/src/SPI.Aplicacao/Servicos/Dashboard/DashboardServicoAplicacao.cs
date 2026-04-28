@@ -39,7 +39,7 @@ public sealed class DashboardAppService : IDashboardAppService
             throw new UnauthorizedAccessException("Usuario sem permissao para visualizar dashboard.");
         }
 
-        if (actor.Role is UserRole.Admin or UserRole.Analyst)
+        if (actor.Role == UserRole.Analyst)
         {
             var users = await _userRepository.ListAsync(cancellationToken);
             var patients = await _patientRepository.ListAsync(cancellationToken);
@@ -59,13 +59,31 @@ public sealed class DashboardAppService : IDashboardAppService
         }
 
         var accessScope = AccessScopeResolver.Resolve(actor);
-        var scopedUsers = await _userRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
-        var scopedPatients = await _patientRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
-        var scopedEvaluations = await _evaluationRepository.ListDetailedByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
-        var scopedForms = await _formRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
-        var scopedGroups = await _groupRepository.ListByIdsAsync(
-            actor.Role.HasManagerPrivileges() ? accessScope.ManagedGroupIds : accessScope.OperationalGroupIds,
-            cancellationToken);
+        List<SPI.Domain.Entities.User> scopedUsers;
+        List<SPI.Domain.Entities.Patient> scopedPatients;
+        List<SPI.Domain.ReadModels.EvaluationDetails> scopedEvaluations;
+        List<SPI.Domain.Entities.FormTemplate> scopedForms;
+        List<SPI.Domain.Entities.Group> scopedGroups;
+
+        if (accessScope.IsAdmin && accessScope.OrganizationId.HasValue)
+        {
+            var orgId = accessScope.OrganizationId.Value;
+            scopedUsers = await _userRepository.ListByOrganizationIdAsync(orgId, cancellationToken);
+            scopedPatients = await _patientRepository.ListByOrganizationIdAsync(orgId, cancellationToken);
+            scopedEvaluations = await _evaluationRepository.ListDetailedByOrganizationIdAsync(orgId, cancellationToken);
+            scopedForms = await _formRepository.ListByOrganizationIdAsync(orgId, cancellationToken);
+            scopedGroups = await _groupRepository.ListByOrganizationIdAsync(orgId, cancellationToken);
+        }
+        else
+        {
+            scopedUsers = await _userRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+            scopedPatients = await _patientRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+            scopedEvaluations = await _evaluationRepository.ListDetailedByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+            scopedForms = await _formRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+            scopedGroups = await _groupRepository.ListByIdsAsync(
+                actor.Role.HasManagerPrivileges() ? accessScope.ManagedGroupIds : accessScope.OperationalGroupIds,
+                cancellationToken);
+        }
 
         return new DashboardResponseDto
         {

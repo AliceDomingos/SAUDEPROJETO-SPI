@@ -4,6 +4,7 @@ internal sealed record AccessScope(
     bool IsAdmin,
     bool IsAnalyst,
     bool IsManager,
+    int? OrganizationId,
     IReadOnlyCollection<int> ManagedGroupIds,
     IReadOnlyCollection<int> MemberGroupIds)
 {

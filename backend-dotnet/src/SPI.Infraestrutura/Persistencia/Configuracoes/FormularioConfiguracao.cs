@@ -57,6 +57,14 @@ public sealed class FormTemplateConfiguration : IEntityTypeConfiguration<FormTem
             .HasForeignKey(x => x.FormTemplateId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(x => x.OrganizationId)
+            .HasColumnName("organization_id");
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.GroupId);
         builder.HasIndex(x => x.CriadoPorUsuarioId);
     }

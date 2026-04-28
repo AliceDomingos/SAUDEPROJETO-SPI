@@ -8,8 +8,7 @@ public sealed class UpdateGroupRequestDto
     [MaxLength(200)]
     public string Nome { get; init; } = string.Empty;
 
-    [Required]
-    public int GestorId { get; init; }
+    public int? GestorId { get; init; }
 }
 
 

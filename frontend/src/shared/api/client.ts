@@ -13,7 +13,6 @@ export function getApiUrlCandidates() {
   const storedUrl = localStorage.getItem('api_base_url');
 
   return [
-    storedUrl,
     configuredUrl,
     `http://${host}:${DEFAULT_API_PORT}`,
     `http://localhost:${DEFAULT_API_PORT}`,
@@ -21,6 +20,7 @@ export function getApiUrlCandidates() {
     `http://${host}:${LEGACY_API_PORT}`,
     `http://localhost:${LEGACY_API_PORT}`,
     `http://127.0.0.1:${LEGACY_API_PORT}`,
+    storedUrl,
   ]
     .filter((url): url is string => Boolean(url?.trim()))
     .map(normalizeApiUrl)
@@ -51,11 +51,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
+    const requestUrl = String(err.config?.url ?? '');
+    const isAuthRequest =
+      requestUrl.includes('/api/auth/login') ||
+      requestUrl.includes('/api/auth/set-password') ||
+      requestUrl.includes('/password-invite');
+
+    const hasToken = Boolean(localStorage.getItem('token'));
+    if (err.response?.status === 401 && !isAuthRequest && !hasToken) {
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
+
     return Promise.reject(err);
   }
 );
