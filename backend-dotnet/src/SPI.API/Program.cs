@@ -4,6 +4,7 @@ using SPI.Infrastructure.Data.Security;
 using SPI.Infrastructure.IoC;
 using SPI.Api.Extensions;
 using SPI.Api.Middlewares;
+using SPI.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -13,6 +14,7 @@ var developmentUrlOptions = builder.ConfigureDevelopmentUrls();
 builder.Services.AddSingleton(developmentUrlOptions);
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddSingleton<SpiMockSusDashboardService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

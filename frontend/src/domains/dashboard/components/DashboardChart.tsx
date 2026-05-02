@@ -1,29 +1,26 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import type { DashboardDistributionItem } from '../api';
 
 interface DashboardChartProps {
-  semIndicativo: number;
-  teaLeveModerado: number;
-  teaGrave: number;
+  title: string;
+  data: DashboardDistributionItem[];
+  colors?: string[];
 }
 
-export default function DashboardChart({ semIndicativo, teaLeveModerado, teaGrave }: DashboardChartProps) {
-  const data = [
-    { name: 'Sem Indicativo', value: semIndicativo, fill: '#16a34a' },
-    { name: 'TEA Leve/Moderado', value: teaLeveModerado, fill: '#ca8a04' },
-    { name: 'TEA Grave', value: teaGrave, fill: '#dc2626' },
-  ];
+const defaultColors = ['#2563eb', '#ca8a04', '#dc2626', '#16a34a', '#7c3aed', '#0891b2'];
 
+export default function DashboardChart({ title, data, colors = defaultColors }: DashboardChartProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Distribuição por Classificação</h3>
-      <ResponsiveContainer width="100%" height={200}>
+      <h3 className="text-sm font-semibold text-gray-700 mb-4">{title}</h3>
+      <ResponsiveContainer width="100%" height={240}>
         <BarChart data={data}>
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} height={54} angle={-18} textAnchor="end" />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip />
           <Bar dataKey="value" radius={[6, 6, 0, 0]}>
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} />
+              <Cell key={entry.label} fill={colors[index % colors.length]} />
             ))}
           </Bar>
         </BarChart>

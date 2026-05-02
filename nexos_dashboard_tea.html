@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXOS — Dashboard Triagem TEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue-dark:   #1a56a0;
+    --blue-mid:    #2272c3;
+    --blue-light:  #5ba4e6;
+    --blue-pale:   #dbeeff;
+    --blue-ghost:  #f0f7ff;
+    --green:       #22c55e;
+    --green-pale:  #dcfce7;
+    --amber:       #f59e0b;
+    --amber-pale:  #fef3c7;
+    --red:         #ef4444;
+    --red-pale:    #fee2e2;
+    --purple:      #7c3aed;
+    --purple-pale: #ede9fe;
+    --text:        #1e293b;
+    --text-muted:  #64748b;
+    --text-light:  #94a3b8;
+    --border:      #e2e8f0;
+    --bg:          #f1f5f9;
+    --white:       #ffffff;
+    --sidebar-w:   220px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo img {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+
+  .sidebar-logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--blue-dark);
+    letter-spacing: -0.5px;
+  }
+
+  .sidebar-logo-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  .sidebar-nav {
+    padding: 16px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: var(--blue-ghost); color: var(--blue-mid); }
+  .nav-item.active { background: var(--blue-pale); color: var(--blue-dark); }
+  .nav-item .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 34px; height: 34px;
+    background: var(--blue-pale);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--blue-dark);
+    flex-shrink: 0;
+  }
+
+  .avatar-info .name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .avatar-info .role { font-size: 10px; color: var(--text-muted); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-left h1 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-left p {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    font-weight: 500;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge-stat {
+    background: var(--blue-ghost);
+    border: 1px solid var(--blue-pale);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-dark);
+  }
+
+  .badge-live {
+    background: var(--green-pale);
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .badge-live::before { content:'●'; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── CONTENT ── */
+  .content { padding: 24px 28px 48px; }
+
+  /* ── FILTERS ── */
+  .filters-bar {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-divider { width: 1px; height: 28px; background: var(--border); }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .filter-chip:hover { border-color: var(--blue-light); color: var(--blue-mid); background: var(--blue-ghost); }
+  .filter-chip.active { border-color: var(--blue-mid); background: var(--blue-pale); color: var(--blue-dark); }
+  .filter-chip.active-green { border-color: var(--green); background: var(--green-pale); color: #16a34a; }
+
+  select.filter-select {
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  select.filter-select:focus { border-color: var(--blue-mid); }
+
+  .filter-reset {
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .filter-reset:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── SECTION HEADER ── */
+  .section-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 14px;
+  }
+
+  .section-pill {
+    background: var(--blue-pale);
+    color: var(--blue-dark);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .section-hdr hr { flex:1; border:none; border-top:1px solid var(--border); }
+
+  /* ── KPI CARDS ── */
+  .grid-kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  .kpi-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .kpi-card:hover { box-shadow: 0 6px 20px rgba(34,114,195,0.10); transform: translateY(-2px); }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .kpi-card:nth-child(1) { animation-delay:.05s }
+  .kpi-card:nth-child(2) { animation-delay:.10s }
+  .kpi-card:nth-child(3) { animation-delay:.15s }
+  .kpi-card:nth-child(4) { animation-delay:.20s }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .kpi-card.c-blue::after   { background: linear-gradient(90deg, var(--blue-mid), var(--blue-light)); }
+  .kpi-card.c-green::after  { background: linear-gradient(90deg, var(--green), #86efac); }
+  .kpi-card.c-amber::after  { background: linear-gradient(90deg, var(--amber), #fcd34d); }
+  .kpi-card.c-red::after    { background: linear-gradient(90deg, var(--red), #fca5a5); }
+  .kpi-card.c-purple::after { background: linear-gradient(90deg, var(--purple), #a78bfa); }
+
+  .kpi-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .kpi-icon-box {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .kpi-icon-box.ib-blue   { background: var(--blue-pale); }
+  .kpi-icon-box.ib-green  { background: var(--green-pale); }
+  .kpi-icon-box.ib-amber  { background: var(--amber-pale); }
+  .kpi-icon-box.ib-red    { background: var(--red-pale); }
+  .kpi-icon-box.ib-purple { background: var(--purple-pale); }
+
+  .kpi-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .kpi-tag.t-blue   { background: var(--blue-pale);   color: var(--blue-dark); }
+  .kpi-tag.t-green  { background: var(--green-pale);  color: #16a34a; }
+  .kpi-tag.t-amber  { background: var(--amber-pale);  color: #92400e; }
+  .kpi-tag.t-red    { background: var(--red-pale);    color: #991b1b; }
+  .kpi-tag.t-purple { background: var(--purple-pale); color: #5b21b6; }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .kpi-value {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .kpi-value .unit { font-size: 16px; font-weight: 600; letter-spacing: 0; color: var(--text-muted); }
+
+  .kpi-foot {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  .delta.good   { background: var(--green-pale);  color: #16a34a; }
+  .delta.warn   { background: var(--amber-pale);  color: #92400e; }
+  .delta.bad    { background: var(--red-pale);    color: #991b1b; }
+  .delta.info   { background: var(--blue-pale);   color: var(--blue-dark); }
+
+  /* ── PROGRESS MINI ── */
+  .mini-prog { margin-top: 10px; }
+  .mini-prog .track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .mini-prog .fill  { height: 100%; border-radius: 3px; transition: width 1.2s ease; }
+
+  /* ── CHART CARDS ── */
+  .grid-chart-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-chart-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+
+  .chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    animation: fadeUp 0.5s ease both;
+    transition: box-shadow 0.2s;
+  }
+
+  .chart-card:hover { box-shadow: 0 4px 16px rgba(34,114,195,0.08); }
+
+  .chart-card-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .chart-card-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    font-weight: 500;
+  }
+
+  .chart-wrap { position: relative; }
+
+  /* ── HEATMAP ── */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .heat-cell {
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: default;
+    transition: transform 0.18s, box-shadow 0.18s;
+    border: 1.5px solid transparent;
+  }
+
+  .heat-cell:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+
+  .heat-cell .h-name  { font-size: 10px; font-weight: 700; margin-bottom: 5px; }
+  .heat-cell .h-total { font-size: 20px; font-weight: 800; line-height: 1; }
+  .heat-cell .h-sev   { font-size: 10px; margin-top: 3px; font-weight: 600; }
+
+  /* ── PROG ROWS ── */
+  .prog-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .prog-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .prog-row .pl { font-size: 12px; font-weight: 600; color: var(--text); width: 130px; flex-shrink: 0; }
+  .prog-row .pb { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .prog-row .pf { height: 100%; border-radius: 4px; }
+  .prog-row .pv { font-size: 12px; font-weight: 700; color: var(--text); width: 36px; text-align: right; }
+
+  /* ── ECO CARDS ── */
+  .eco-box {
+    background: linear-gradient(135deg, var(--blue-ghost), #e0f2fe);
+    border: 1.5px solid var(--blue-pale);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .eco-box .eco-icon { font-size: 30px; }
+  .eco-box .eco-big  { font-size: 26px; font-weight: 800; color: var(--blue-dark); line-height: 1; letter-spacing: -0.5px; }
+  .eco-box .eco-sm   { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
+
+  .eco-math {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .eco-math .eb {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px;
+  }
+
+  .eco-math .eb .en { font-size: 18px; font-weight: 800; color: var(--text); }
+  .eco-math .eb .el { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
+  .eco-math .eop    { font-size: 20px; font-weight: 800; color: var(--text-light); }
+
+  /* ── STATUS LIST ── */
+  .status-list { display: flex; flex-direction: column; }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status-item:last-child { border-bottom: none; }
+
+  .status-left { display: flex; align-items: center; gap: 10px; }
+  .status-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .status-nm   { font-size: 13px; font-weight: 600; }
+  .status-pct  { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .status-n    { font-size: 14px; font-weight: 800; }
+
+  /* ── FUNNEL STEPS ── */
+  .funnel-step { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .funnel-step:last-child { margin-bottom: 0; }
+  .f-num { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-ghost); border: 1.5px solid var(--blue-pale); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--blue-dark); flex-shrink: 0; }
+  .f-bar { flex: 1; }
+  .f-lbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .f-lbl strong { color: var(--text); font-weight: 700; }
+  .f-track { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+  .f-fill  { height: 100%; border-radius: 5px; }
+
+  /* ── DIAG TIPO ── */
+  .diag-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .diag-row:last-child { border-bottom: none; }
+
+  .diag-left  { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text); }
+  .diag-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .diag-count { font-size: 14px; font-weight: 800; color: var(--text); }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    margin-top: 36px;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .footer-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--blue-dark); }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .grid-kpi { grid-template-columns: repeat(2, 1fr); }
+    .grid-chart-2 { grid-template-columns: 1fr; }
+    .grid-chart-3 { grid-template-columns: 1fr; }
+    .heatmap-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .grid-kpi { grid-template-columns: 1fr; }
+    .eco-math { grid-template-columns: 1fr; }
+    .eco-math .eop { display: none; }
+    .content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <!-- mascot inline SVG approximation as colored brain character -->
+    <div style="width:42px;height:42px;background:linear-gradient(135deg,#dbeeff,#5ba4e6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">🧠</div>
+    <div>
+      <div class="sidebar-logo-text">NEXOS</div>
+      <div class="sidebar-logo-sub">Sistema de Triagem</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="#"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📋</span> Avaliações</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📝</span> Formulários</a>
+    <a class="nav-item" href="#"><span class="nav-icon">👶</span> Pacientes</a>
+    <a class="nav-item" href="#"><span class="nav-icon">👥</span> Grupos</a>
+    <a class="nav-item" href="#"><span class="nav-icon">👤</span> Usuários</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">A</div>
+    <div class="avatar-info">
+      <div class="name">Administrador</div>
+      <div class="role">Admin</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Dashboard</h1>
+      <p>Resumo das avaliações SPI — Triagem Infantil TEA · Jan/2025 – Abr/2026</p>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-live">Atualizado</div>
+      <div class="badge-stat">1.000 registros</div>
+      <div class="badge-stat">5 UBS ativas</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- FILTROS -->
+    <div class="filters-bar">
+      <span class="filter-label">🔍 Filtros</span>
+      <div class="filter-divider"></div>
+
+      <div class="filter-group">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">Sexo:</span>
+        <button class="filter-chip active" onclick="toggleFilter(this,'sexo','Todos')">Todos</button>
+        <button class="filter-chip" onclick="toggleFilter(this,'sexo','Masculino')">♂ Masculino</button>
+        <button class="filter-chip" onclick="toggleFilter(this,'sexo','Feminino')">♀ Feminino</button>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <div class="filter-group">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">Bairro:</span>
+        <select class="filter-select" onchange="applyBairro(this.value)">
+          <option value="Todos">Todos os bairros</option>
+          <option>Centro</option>
+          <option>Setor Sul</option>
+          <option>Vila Nova</option>
+          <option>Jardim América</option>
+          <option>São João</option>
+          <option>Primavera</option>
+          <option>Residencial Norte</option>
+          <option>Industrial</option>
+          <option>Bela Vista</option>
+          <option>Cruzeiro</option>
+        </select>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <div class="filter-group">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">Período:</span>
+        <select class="filter-select" onchange="applyPeriodo(this.value)">
+          <option value="todos">Jan/2025 – Abr/2026</option>
+          <option value="2025">Apenas 2025</option>
+          <option value="2026">Apenas 2026</option>
+          <option value="q1_25">1º Trim 2025</option>
+          <option value="q2_25">2º Trim 2025</option>
+          <option value="q3_25">3º Trim 2025</option>
+          <option value="q4_25">4º Trim 2025</option>
+        </select>
+      </div>
+
+      <button class="filter-reset" onclick="resetFilters()">✕ Limpar filtros</button>
+    </div>
+
+    <!-- ── SEÇÃO 1: TRIAGEM ── -->
+    <div class="section-hdr">
+      <div class="section-pill">📋 Triagem & Rastreio</div>
+      <hr>
+    </div>
+
+    <div class="grid-kpi">
+      <!-- KPI 1 -->
+      <div class="kpi-card c-blue">
+        <div class="kpi-top">
+          <div class="kpi-icon-box ib-blue">📋</div>
+          <span class="kpi-tag t-blue">KPI 01</span>
+        </div>
+        <div class="kpi-label">Total Avaliações</div>
+        <div class="kpi-value" id="kv1">1.000</div>
+        <div class="kpi-foot">
+          <span id="kv1-sub">Média: 63/mês</span>
+          <span class="delta info">cobertura ativa</span>
+        </div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card c-amber">
+        <div class="kpi-top">
+          <div class="kpi-icon-box ib-amber">🎂</div>
+          <span class="kpi-tag t-amber">KPI 02</span>
+        </div>
+        <div class="kpi-label">Idade Média 1ª Triagem</div>
+        <div class="kpi-value" id="kv2">6,9 <span class="unit">anos</span></div>
+        <div class="kpi-foot">
+          <span class="delta warn">⚠ meta: &lt; 4 anos</span>
+        </div>
+        <div class="mini-prog">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-light);">
+            <span>2 anos</span><span>Meta: 4</span><span>12 anos</span>
+          </div>
+          <div class="track"><div class="fill" style="width:49%;background:var(--amber);"></div></div>
+        </div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card c-green">
+        <div class="kpi-top">
+          <div class="kpi-icon-box ib-green">🍼</div>
+          <span class="kpi-tag t-green">KPI 03</span>
+        </div>
+        <div class="kpi-label">Triadas até 3 Anos</div>
+        <div class="kpi-value" id="kv3">17,5<span class="unit">%</span></div>
+        <div class="kpi-foot">
+          <span>175 crianças</span>
+          <span class="delta warn">meta: &gt;40%</span>
+        </div>
+        <div class="mini-prog">
+          <div class="track"><div class="fill" style="width:17.5%;background:var(--green);"></div></div>
+        </div>
+      </div>
+
+      <!-- KPI — Mensal (mês atual) -->
+      <div class="kpi-card c-blue">
+        <div class="kpi-top">
+          <div class="kpi-icon-box ib-blue">📅</div>
+          <span class="kpi-tag t-blue">Mês Atual</span>
+        </div>
+        <div class="kpi-label">Triagens no Mês</div>
+        <div class="kpi-value">71</div>
+        <div class="kpi-foot">
+          <span>Mar/2026 · maior volume</span>
+          <span class="delta good">↑ +10%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico mensal -->
+    <div style="margin-top:14px;">
+      <div class="chart-card">
+        <div class="chart-card-title">Crianças Triadas por Mês</div>
+        <div class="chart-card-sub">Volume mensal de triagens realizadas · jan/2025 a abr/2026</div>
+        <div class="chart-wrap" style="height:170px;">
+          <canvas id="chartMensal"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 2: RISCO ── -->
+    <div class="section-hdr">
+      <div class="section-pill" style="background:var(--red-pale);color:#991b1b;">🔴 Estratificação de Risco</div>
+      <hr>
+    </div>
+
+    <div class="grid-chart-2">
+      <!-- Distribuição doughnut -->
+      <div class="chart-card">
+        <div class="chart-card-title">KPI 06 — Distribuição por Nível de Risco</div>
+        <div class="chart-card-sub">Score CARS-2 / M-CHAT-R/F · 1.000 crianças triadas</div>
+        <div style="display:flex; align-items:center; gap:24px;">
+          <div class="chart-wrap" style="height:180px; width:180px; flex-shrink:0;">
+            <canvas id="chartRisco"></canvas>
+          </div>
+          <div style="flex:1;">
+            <div class="prog-list">
+              <div class="prog-row">
+                <span class="pl" style="color:#991b1b;">🔴 Severo</span>
+                <div class="pb"><div class="pf" style="width:20.6%;background:var(--red);"></div></div>
+                <span class="pv">20,6%</span>
+              </div>
+              <div class="prog-row">
+                <span class="pl" style="color:#92400e;">🟡 Moderado</span>
+                <div class="pb"><div class="pf" style="width:25.5%;background:var(--amber);"></div></div>
+                <span class="pv">25,5%</span>
+              </div>
+              <div class="prog-row">
+                <span class="pl" style="color:var(--blue-dark);">🔵 Leve</span>
+                <div class="pb"><div class="pf" style="width:34.7%;background:var(--blue-light);"></div></div>
+                <span class="pv">34,7%</span>
+              </div>
+              <div class="prog-row">
+                <span class="pl" style="color:#166534;">🟢 Sem Sinais</span>
+                <div class="pb"><div class="pf" style="width:19.2%;background:var(--green);"></div></div>
+                <span class="pv">19,2%</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding:10px 14px;background:var(--red-pale);border-radius:10px;">
+              <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:3px;">⚠ Atenção</div>
+              <div style="font-size:11px;color:#991b1b;font-weight:500;">206 crianças com score ≥37 necessitam encaminhamento imediato.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heatmap bairros -->
+      <div class="chart-card">
+        <div class="chart-card-title">KPI 06 — Mapa de Calor por Bairro</div>
+        <div class="chart-card-sub">Intensidade proporcional ao número de casos severos</div>
+        <div class="heatmap-grid">
+          <div class="heat-cell" style="background:#fee2e2;border-color:#fca5a5;">
+            <div class="h-name" style="color:#991b1b;">Industrial</div>
+            <div class="h-total" style="color:#991b1b;">104</div>
+            <div class="h-sev" style="color:#ef4444;">26 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#fee2e2;border-color:#fca5a5;">
+            <div class="h-name" style="color:#991b1b;">Bela Vista</div>
+            <div class="h-total" style="color:#991b1b;">96</div>
+            <div class="h-sev" style="color:#ef4444;">24 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#fef3c7;border-color:#fcd34d;">
+            <div class="h-name" style="color:#92400e;">Vila Nova</div>
+            <div class="h-total" style="color:#92400e;">113</div>
+            <div class="h-sev" style="color:#f59e0b;">23 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#fef3c7;border-color:#fcd34d;">
+            <div class="h-name" style="color:#92400e;">Cruzeiro</div>
+            <div class="h-total" style="color:#92400e;">101</div>
+            <div class="h-sev" style="color:#f59e0b;">21 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#fef3c7;border-color:#fcd34d;">
+            <div class="h-name" style="color:#92400e;">Primavera</div>
+            <div class="h-total" style="color:#92400e;">105</div>
+            <div class="h-sev" style="color:#f59e0b;">20 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#dbeeff;border-color:#93c5fd;">
+            <div class="h-name" style="color:var(--blue-dark);">Centro</div>
+            <div class="h-total" style="color:var(--blue-dark);">95</div>
+            <div class="h-sev" style="color:var(--blue-mid);">20 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#dbeeff;border-color:#93c5fd;">
+            <div class="h-name" style="color:var(--blue-dark);">Setor Sul</div>
+            <div class="h-total" style="color:var(--blue-dark);">104</div>
+            <div class="h-sev" style="color:var(--blue-mid);">18 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#dbeeff;border-color:#93c5fd;">
+            <div class="h-name" style="color:var(--blue-dark);">São João</div>
+            <div class="h-total" style="color:var(--blue-dark);">91</div>
+            <div class="h-sev" style="color:var(--blue-mid);">18 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#dbeeff;border-color:#93c5fd;">
+            <div class="h-name" style="color:var(--blue-dark);">Res. Norte</div>
+            <div class="h-total" style="color:var(--blue-dark);">102</div>
+            <div class="h-sev" style="color:var(--blue-mid);">18 severos</div>
+          </div>
+          <div class="heat-cell" style="background:#dbeeff;border-color:#93c5fd;">
+            <div class="h-name" style="color:var(--blue-dark);">Jd. América</div>
+            <div class="h-total" style="color:var(--blue-dark);">89</div>
+            <div class="h-sev" style="color:var(--blue-mid);">18 severos</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:10px;font-size:10px;font-weight:700;color:var(--text-muted);flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#fee2e2;border:1.5px solid #fca5a5;border-radius:3px;"></span>Alto (&gt;22)</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#fef3c7;border:1.5px solid #fcd34d;border-radius:3px;"></span>Médio (20–22)</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#dbeeff;border:1.5px solid #93c5fd;border-radius:3px;"></span>Regular (≤19)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 3: ENCAMINHAMENTO ── -->
+    <div class="section-hdr">
+      <div class="section-pill" style="background:#ede9fe;color:#5b21b6;">➡️ Encaminhamentos</div>
+      <hr>
+    </div>
+
+    <div class="grid-kpi" style="grid-template-columns:repeat(1,1fr);">
+      <!-- KPI 7 -->
+      <div class="kpi-card c-blue">
+        <div class="kpi-top">
+          <div class="kpi-icon-box ib-blue">➡️</div>
+          <span class="kpi-tag t-blue">KPI 07</span>
+        </div>
+        <div class="kpi-label">Total Encaminhadas</div>
+        <div class="kpi-value">466</div>
+        <div class="kpi-foot">
+          <span>46,6% das triadas</span>
+          <span class="delta info">filtro eficiente</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── SEÇÃO 4: ECONOMIA ── -->
+    <div class="section-hdr">
+      <div class="section-pill" style="background:var(--amber-pale);color:#92400e;">💰 Impacto Econômico</div>
+      <hr>
+    </div>
+
+    <div class="grid-chart-2">
+      <!-- KPI 10 -->
+      <div class="chart-card">
+        <div class="chart-card-title">KPI 10 — Consultas Especializadas Evitadas</div>
+        <div class="chart-card-sub">Economia gerada pela triagem como filtro inteligente</div>
+        <div class="eco-box">
+          <div class="eco-icon">💡</div>
+          <div>
+            <div class="eco-big">534 consultas evitadas</div>
+            <div class="eco-sm">Sem triagem, todas as 1.000 crianças iriam ao especialista</div>
+          </div>
+        </div>
+        <div class="eco-math">
+          <div class="eb">
+            <div class="en">1.000</div>
+            <div class="el">Triadas</div>
+          </div>
+          <div class="eop">−</div>
+          <div class="eb">
+            <div class="en" style="color:var(--red);">466</div>
+            <div class="el">Encaminhadas</div>
+          </div>
+          <div class="eop">=</div>
+          <div class="eb" style="background:var(--green-pale);border-color:#bbf7d0;">
+            <div class="en" style="color:#16a34a;">534</div>
+            <div class="el">Evitadas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI 11 -->
+      <div class="chart-card">
+        <div class="chart-card-title">KPI 11 — Economia Financeira Estimada</div>
+        <div class="chart-card-sub">Custo médio R$ 1.000 por consulta especializada</div>
+        <div class="eco-box" style="background:linear-gradient(135deg,var(--green-pale),#bbf7d0);border-color:#86efac;">
+          <div class="eco-icon">🏦</div>
+          <div>
+            <div class="eco-big" style="color:#166534;">R$ 534.000</div>
+            <div class="eco-sm" style="color:#15803d;">estimativa conservadora de economia anual</div>
+          </div>
+        </div>
+        <div class="prog-list">
+          <div class="prog-row">
+            <span class="pl" style="font-size:11px;">Neuropediatra</span>
+            <div class="pb"><div class="pf" style="width:85%;background:var(--blue-light);"></div></div>
+            <span class="pv" style="font-size:11px;color:var(--blue-dark);">R$1.200</span>
+          </div>
+          <div class="prog-row">
+            <span class="pl" style="font-size:11px;">Psiquiatra Infantil</span>
+            <div class="pb"><div class="pf" style="width:75%;background:var(--purple);opacity:0.7;"></div></div>
+            <span class="pv" style="font-size:11px;color:var(--purple);">R$900</span>
+          </div>
+          <div class="prog-row">
+            <span class="pl" style="font-size:11px;">Psicólogo Infantil</span>
+            <div class="pb"><div class="pf" style="width:65%;background:var(--green);opacity:0.8;"></div></div>
+            <span class="pv" style="font-size:11px;color:#16a34a;">R$800</span>
+          </div>
+          <div class="prog-row">
+            <span class="pl" style="font-size:11px;">Fonoaudiólogo</span>
+            <div class="pb"><div class="pf" style="width:58%;background:var(--amber);"></div></div>
+            <span class="pv" style="font-size:11px;color:#92400e;">R$700</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-chart-2">
+      <div class="chart-card">
+        <div class="chart-card-title">UBS — Volume de Triagens</div>
+        <div class="chart-card-sub">Distribuição por unidade básica de saúde</div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="chartUbs"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="page-footer">
+      <div class="footer-logo">
+        <span style="font-size:18px;">🧠</span>
+        NEXOS — Sistema Municipal de Triagem TEA
+      </div>
+      <span>Base: 1.000 registros · Protocolos CARS-2 e M-CHAT-R/F · 5 UBS · 10 bairros</span>
+      <span>Jan/2025 – Abr/2026 · Gerado para análise gerencial</span>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── CHART.JS DEFAULTS ──
+Chart.defaults.font.family = "'Nunito', sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#64748b';
+
+const blue   = '#2272c3';
+const blueL  = '#5ba4e6';
+const bluePa = '#dbeeff';
+const green  = '#22c55e';
+const amber  = '#f59e0b';
+const red    = '#ef4444';
+const purple = '#7c3aed';
+const gray   = '#94a3b8';
+
+// ── MENSAL BAR ──
+new Chart(document.getElementById('chartMensal'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan/25','Fev/25','Mar/25','Abr/25','Mai/25','Jun/25','Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26'],
+    datasets: [{
+      data: [57,62,77,64,58,53,62,70,60,66,54,75,66,67,71,38],
+      backgroundColor: ctx => {
+        const v = ctx.raw;
+        if (v >= 75) return blue;
+        if (v >= 65) return blueL;
+        return bluePa;
+      },
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.raw} triagens` }}
+    },
+    scales: {
+      x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: '#f1f5f9' }, beginAtZero: true, ticks: { stepSize: 20 } }
+    }
+  }
+});
+
+// ── RISCO DOUGHNUT ──
+new Chart(document.getElementById('chartRisco'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Severo','Moderado','Leve','Sem Sinais'],
+    datasets: [{
+      data: [206,255,347,192],
+      backgroundColor: [red, amber, blueL, green],
+      borderColor: '#ffffff',
+      borderWidth: 3,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${(ctx.raw/10).toFixed(1)}%)` }
+    }}
+  }
+});
+
+// ── UBS BAR ──
+new Chart(document.getElementById('chartUbs'), {
+  type: 'bar',
+  data: {
+    labels: ['UBS Vila Nova','UBS Primavera','UBS São João','UBS Centro','UBS Jd. América'],
+    datasets: [{
+      label: 'Triagens',
+      data: [215,206,195,199,185],
+      backgroundColor: [blue, blueL, '#93c5fd', '#bfdbfe', bluePa],
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: { label: ctx => ` ${ctx.raw} triagens` }
+    }},
+    scales: {
+      x: { grid: { color: '#f1f5f9' }, beginAtZero: true },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ── FILTER LOGIC ──
+function toggleFilter(btn, group, val) {
+  btn.closest('.filter-group').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  updateFilters();
+}
+
+function applyBairro(v) { updateFilters(); }
+function applyPeriodo(v) { updateFilters(); }
+
+function resetFilters() {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.filter-group').forEach(g => {
+    const first = g.querySelector('.filter-chip');
+    if (first) first.classList.add('active');
+  });
+  document.querySelectorAll('select.filter-select').forEach(s => s.selectedIndex = 0);
+  updateFilters();
+}
+
+function updateFilters() {
+  // In a real integration this would reload data from the backend
+  // Here we just show a visual feedback
+  document.querySelectorAll('.kpi-card').forEach(c => {
+    c.style.opacity = '0.6';
+    setTimeout(() => c.style.opacity = '1', 350);
+  });
+}
+</script>
+</body>
+</html>

@@ -33,6 +33,7 @@ export default function UserFormFields({
   emailHint,
 }: UserFormFieldsProps) {
   const showGroups = values.role !== 'analista' && groups.length > 0;
+  const showSingleGroupSelect = showGroups && singleGroupSelect && (groups.length > 1 || values.role === 'gestor');
 
   useEffect(() => {
     if (singleGroupSelect && groups.length === 1 && onGroupIdsChange && values.groupIds.length === 0) {
@@ -111,9 +112,11 @@ export default function UserFormFields({
         </div>
       </div>
 
-      {showGroups && singleGroupSelect && groups.length > 1 && (
+      {showSingleGroupSelect && (
         <div>
-          <label className="mb-1 block text-sm font-medium">Grupo vinculado <span className="text-gray-400 font-normal">(opcional)</span></label>
+          <label className="mb-1 block text-sm font-medium">
+            Grupo vinculado <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
           <select
             value={values.groupIds[0] ? String(values.groupIds[0]) : ''}
             onChange={(event) => handleSingleGroupChange(event.target.value)}

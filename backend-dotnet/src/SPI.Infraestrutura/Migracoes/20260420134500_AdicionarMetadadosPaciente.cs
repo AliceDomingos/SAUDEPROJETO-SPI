@@ -66,7 +66,7 @@ public partial class AddPatientMetadata : Migration
                   AND object_id = OBJECT_ID(N'dbo.patients')
             )
             BEGIN
-                CREATE UNIQUE INDEX IX_patients_cpf ON dbo.patients(cpf) WHERE cpf <> N'';
+                EXEC(N'CREATE UNIQUE INDEX IX_patients_cpf ON dbo.patients(cpf) WHERE cpf <> N'''';');
             END;
             """);
     }
