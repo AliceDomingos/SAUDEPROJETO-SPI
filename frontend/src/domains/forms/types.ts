@@ -1,9 +1,15 @@
+export interface FormQuestionOption {
+  valor: number;
+  descricao: string;
+}
+
 export interface FormQuestion {
   id?: number;
   texto: string;
   peso: number;
   ordem: number;
   ativa?: boolean;
+  opcoes: FormQuestionOption[];
 }
 
 export interface Formulario {
@@ -25,7 +31,7 @@ export interface CriarFormularioPayload {
   nome: string;
   descricao?: string;
   groupId?: number;
-  perguntas: { texto: string; peso: number; ordem: number }[];
+  perguntas: { texto: string; peso: number; ordem: number; opcoes: FormQuestionOption[] }[];
 }
 
 export interface Grupo {
