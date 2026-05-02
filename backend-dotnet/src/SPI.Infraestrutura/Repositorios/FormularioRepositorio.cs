@@ -19,7 +19,7 @@ public sealed class FormRepository : IFormRepository
             .AsNoTracking()
             .Include(x => x.Group)
             .Include(x => x.CriadoPorUsuario)
-            .Include(x => x.Questions)
+            .Include(x => x.Questions).ThenInclude(q => q.Options)
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
@@ -28,7 +28,7 @@ public sealed class FormRepository : IFormRepository
             .AsNoTracking()
             .Include(x => x.Group)
             .Include(x => x.CriadoPorUsuario)
-            .Include(x => x.Questions)
+            .Include(x => x.Questions).ThenInclude(q => q.Options)
             .Where(x => x.GroupId == null || groupIds.Contains(x.GroupId.Value))
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
@@ -38,21 +38,21 @@ public sealed class FormRepository : IFormRepository
             .AsNoTracking()
             .Include(x => x.Group)
             .Include(x => x.CriadoPorUsuario)
-            .Include(x => x.Questions)
+            .Include(x => x.Questions).ThenInclude(q => q.Options)
             .Where(x => x.OrganizationId == organizationId)
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
     public Task<FormTemplate?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         _context.FormTemplates
-            .Include(x => x.Questions)
+            .Include(x => x.Questions).ThenInclude(q => q.Options)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public Task<FormTemplate?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default) =>
         _context.FormTemplates
             .Include(x => x.Group)
             .Include(x => x.CriadoPorUsuario)
-            .Include(x => x.Questions)
+            .Include(x => x.Questions).ThenInclude(q => q.Options)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public Task AddAsync(FormTemplate formTemplate, CancellationToken cancellationToken = default) =>

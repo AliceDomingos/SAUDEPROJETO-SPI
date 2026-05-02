@@ -26,6 +26,7 @@ public static class DatabaseInitializer
             await context.Database.EnsureCreatedAsync(cancellationToken);
             await EnsureSqlitePatientColumnsAsync(context, cancellationToken);
             await EnsureSqliteOrganizationColumnsAsync(context, cancellationToken);
+            await EnsureSqliteFormQuestionOptionsTableAsync(context, cancellationToken);
         }
         else if (databaseInitializationOptions.ApplyMigrationsOnStartup)
         {
@@ -153,6 +154,36 @@ public static class DatabaseInitializer
             {
                 await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             }
+        }
+    }
+
+    private static async Task EnsureSqliteFormQuestionOptionsTableAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var checkCmd = connection.CreateCommand();
+        checkCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='form_question_options';";
+        var exists = await checkCmd.ExecuteScalarAsync(cancellationToken);
+
+        if (exists is null)
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE form_question_options (
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    form_question_id INTEGER NOT NULL,
+                    valor            INTEGER NOT NULL,
+                    descricao        TEXT    NOT NULL,
+                    FOREIGN KEY (form_question_id) REFERENCES form_questions(id) ON DELETE CASCADE
+                );
+                CREATE INDEX IX_form_question_options_form_question_id
+                    ON form_question_options(form_question_id);
+                """,
+                cancellationToken);
         }
     }
 

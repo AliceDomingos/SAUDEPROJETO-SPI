@@ -4,8 +4,10 @@ import { FileText, Pencil, Plus, Printer, Upload } from 'lucide-react';
 import { getForms } from '../api';
 import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
+import PdfPreviewModal from '../components/PdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
-import { exportFormToPdf, parseImportedJson } from '../utils/formExport';
+import { parseImportedJson } from '../utils/formExport';
+import { parseDocxForm } from '../utils/formDocxImport';
 
 export default function FormsListPage() {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export default function FormsListPage() {
   const [filter, setFilter] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [importError, setImportError] = useState('');
+  const [pdfPreviewForm, setPdfPreviewForm] = useState<Formulario | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,7 +41,8 @@ export default function FormsListPage() {
     e.target.value = '';
     setImportError('');
     try {
-      const data = await parseImportedJson(file);
+      const isDocx = file.name.toLowerCase().endsWith('.docx');
+      const data = isDocx ? await parseDocxForm(file) : await parseImportedJson(file);
       navigate('/formularios/novo', { state: data });
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Erro ao importar arquivo.');
@@ -64,8 +68,8 @@ export default function FormsListPage() {
           </button>
           <button
             type="button"
-            onClick={() => exportFormToPdf(f)}
-            title="Exportar PDF"
+            onClick={() => setPdfPreviewForm(f)}
+            title="Visualizar PDF"
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
           >
             <Printer className="h-3.5 w-3.5" />
@@ -119,7 +123,7 @@ export default function FormsListPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json"
+              accept=".json,.docx"
               className="hidden"
               onChange={handleImportFile}
             />
@@ -172,6 +176,11 @@ export default function FormsListPage() {
           setShowCreateDialog(false);
           loadForms();
         }}
+      />
+
+      <PdfPreviewModal
+        form={pdfPreviewForm}
+        onClose={() => setPdfPreviewForm(null)}
       />
     </>
   );

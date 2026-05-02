@@ -98,7 +98,7 @@ public sealed class FormsAppService : IFormsAppService
             request.Descricao,
             actor.Id,
             request.GroupId,
-            request.Perguntas.Select(x => (x.Texto, x.Peso, x.Ordem)));
+            request.Perguntas.Select(x => BuildQuestionTuple(x)));
 
         if (actor.Role == UserRole.Admin && actor.OrganizationId.HasValue)
         {
@@ -141,7 +141,7 @@ public sealed class FormsAppService : IFormsAppService
             request.Nome,
             request.Descricao,
             request.GroupId,
-            request.Perguntas.Select(x => (x.Texto, x.Peso, x.Ordem)));
+            request.Perguntas.Select(x => BuildQuestionTuple(x)));
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -171,6 +171,20 @@ public sealed class FormsAppService : IFormsAppService
         {
             throw new UnauthorizedAccessException("Usuario sem permissao para criar ou alterar formularios deste grupo.");
         }
+    }
+
+    private static (string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)
+        BuildQuestionTuple(FormQuestionRequestDto x)
+    {
+        IReadOnlyCollection<(int, string)>? opcoes = x.Opcoes.Count > 0
+            ? x.Opcoes.Select(o => (o.Valor, o.Descricao)).ToList()
+            : null;
+
+        var peso = opcoes is { Count: > 0 }
+            ? (decimal)opcoes.Max(o => o.Item1)
+            : x.Peso;
+
+        return (x.Texto, peso, x.Ordem, opcoes);
     }
 
     private static void EnsureCanAccessForm(SPI.Domain.Entities.User actor, int? groupId)

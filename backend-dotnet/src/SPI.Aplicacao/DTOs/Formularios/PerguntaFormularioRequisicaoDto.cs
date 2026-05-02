@@ -13,6 +13,8 @@ public sealed class FormQuestionRequestDto
 
     [Range(1, int.MaxValue)]
     public int Ordem { get; init; }
+
+    public IReadOnlyCollection<FormQuestionOptionRequestDto> Opcoes { get; init; } = [];
 }
 
 

@@ -6,6 +6,8 @@ public sealed class FormQuestion
     {
     }
 
+    private readonly List<FormQuestionOption> _options = [];
+
     public FormQuestion(string texto, decimal peso, int ordem)
     {
         if (string.IsNullOrWhiteSpace(texto))
@@ -37,6 +39,16 @@ public sealed class FormQuestion
     public bool Ativa { get; private set; }
 
     public FormTemplate FormTemplate { get; private set; } = null!;
+    public IReadOnlyCollection<FormQuestionOption> Options => _options;
+
+    internal void SetOptions(IEnumerable<(int Valor, string Descricao)> opcoes)
+    {
+        _options.Clear();
+        foreach (var opcao in opcoes.OrderBy(o => o.Valor))
+        {
+            _options.Add(new FormQuestionOption(opcao.Valor, opcao.Descricao));
+        }
+    }
 }
 
 

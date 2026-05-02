@@ -314,6 +314,34 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
             b.ToTable("form_questions", (string)null);
         });
 
+        modelBuilder.Entity("SPI.Domain.Entities.FormQuestionOption", b =>
+        {
+            b.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("int")
+                .HasColumnName("id");
+
+            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+            b.Property<int>("FormQuestionId")
+                .HasColumnType("int")
+                .HasColumnName("form_question_id");
+
+            b.Property<int>("Valor")
+                .HasColumnType("int")
+                .HasColumnName("valor");
+
+            b.Property<string>("Descricao")
+                .IsRequired()
+                .HasMaxLength(500)
+                .HasColumnType("nvarchar(500)")
+                .HasColumnName("descricao");
+
+            b.HasKey("Id");
+            b.HasIndex("FormQuestionId");
+            b.ToTable("form_question_options", (string)null);
+        });
+
         modelBuilder.Entity("SPI.Domain.Entities.Evaluation", b =>
         {
             b.Property<int>("Id")
@@ -449,6 +477,17 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                 .IsRequired();
 
             b.Navigation("FormTemplate");
+        });
+
+        modelBuilder.Entity("SPI.Domain.Entities.FormQuestionOption", b =>
+        {
+            b.HasOne("SPI.Domain.Entities.FormQuestion", "FormQuestion")
+                .WithMany("Options")
+                .HasForeignKey("FormQuestionId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            b.Navigation("FormQuestion");
         });
 
         modelBuilder.Entity("SPI.Domain.Entities.Evaluation", b =>

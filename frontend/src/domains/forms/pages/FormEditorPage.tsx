@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { createForm, updateForm, getFormById, getGrupos } from '../api';
-import type { FormQuestion, Grupo } from '../types';
+import type { FormQuestion, FormQuestionOption, Grupo } from '../types';
 import type { FormImportData } from '../utils/formExport';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 
 function emptyQuestion(): FormQuestion {
-  return { texto: '', peso: 1, ordem: 1, ativa: true };
+  return { texto: '', peso: 1, ordem: 1, ativa: true, opcoes: [] };
 }
 
 export default function FormEditorPage() {
@@ -36,7 +36,7 @@ export default function FormEditorPage() {
     setDescricao(state.descricao || '');
     setPerguntas(
       state.perguntas.length > 0
-        ? state.perguntas.map((q, i) => ({ ...q, ordem: i + 1, ativa: true }))
+        ? state.perguntas.map((q, i) => ({ ...q, ordem: i + 1, ativa: true, opcoes: q.opcoes ?? [] }))
         : [emptyQuestion()]
     );
   }, []);
@@ -51,7 +51,7 @@ export default function FormEditorPage() {
         setGroupId(form.groupId || '');
         setPerguntas(
           form.perguntas.length > 0
-            ? form.perguntas.map((q, i) => ({ ...q, ordem: i + 1 }))
+            ? form.perguntas.map((q, i) => ({ ...q, ordem: i + 1, opcoes: q.opcoes ?? [] }))
             : [emptyQuestion()]
         );
       })
@@ -59,7 +59,11 @@ export default function FormEditorPage() {
       .finally(() => setLoading(false));
   }, [id, isEdit]);
 
-  const pesoTotal = perguntas.reduce((sum, q) => sum + (Number(q.peso) || 0), 0);
+  function derivedPeso(q: FormQuestion): number {
+    return q.opcoes.length > 0 ? Math.max(...q.opcoes.map((o) => o.valor), 0) : q.peso;
+  }
+
+  const pesoTotal = perguntas.reduce((sum, q) => sum + derivedPeso(q), 0);
 
   function addPergunta() {
     setPerguntas((prev) => [...prev, { ...emptyQuestion(), ordem: prev.length + 1 }]);
@@ -88,11 +92,42 @@ export default function FormEditorPage() {
     });
   }
 
+  function addOpcao(qIndex: number) {
+    setPerguntas((prev) => {
+      const updated = [...prev];
+      const q = updated[qIndex];
+      const nextValor = q.opcoes.length > 0 ? Math.max(...q.opcoes.map((o) => o.valor)) + 1 : 1;
+      updated[qIndex] = { ...q, opcoes: [...q.opcoes, { valor: nextValor, descricao: '' }] };
+      return updated;
+    });
+  }
+
+  function removeOpcao(qIndex: number, oIndex: number) {
+    setPerguntas((prev) => {
+      const updated = [...prev];
+      updated[qIndex] = {
+        ...updated[qIndex],
+        opcoes: updated[qIndex].opcoes.filter((_, i) => i !== oIndex),
+      };
+      return updated;
+    });
+  }
+
+  function updateOpcao(qIndex: number, oIndex: number, field: keyof FormQuestionOption, value: string | number) {
+    setPerguntas((prev) => {
+      const updated = [...prev];
+      const opcoes = [...updated[qIndex].opcoes];
+      opcoes[oIndex] = { ...opcoes[oIndex], [field]: value };
+      updated[qIndex] = { ...updated[qIndex], opcoes };
+      return updated;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
-    const validPerguntas = perguntas.filter((q) => q.texto.trim().length > 0 && Number(q.peso) > 0);
+    const validPerguntas = perguntas.filter((q) => q.texto.trim().length > 0 && derivedPeso(q) > 0);
     if (validPerguntas.length === 0) {
       setError('Adicione pelo menos uma pergunta válida com texto e peso.');
       return;
@@ -106,8 +141,9 @@ export default function FormEditorPage() {
         groupId: groupId ? Number(groupId) : undefined,
         perguntas: validPerguntas.map((q, i) => ({
           texto: q.texto.trim(),
-          peso: Number(q.peso),
+          peso: derivedPeso(q),
           ordem: i + 1,
+          opcoes: q.opcoes,
         })),
       };
 
@@ -156,7 +192,6 @@ export default function FormEditorPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Dados do formulário */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <h3 className="text-sm font-semibold text-gray-700">Informações</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -198,7 +233,6 @@ export default function FormEditorPage() {
           </div>
         </div>
 
-        {/* Perguntas */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">
@@ -216,67 +250,90 @@ export default function FormEditorPage() {
 
           <div className="space-y-3">
             {perguntas.map((q, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
-              >
-                <span className="text-xs font-bold text-gray-400 pt-2 mt-1 w-6 text-center shrink-0">
-                  #{i + 1}
-                </span>
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="md:col-span-2">
-                    <input
-                      value={q.texto}
-                      onChange={(e) => updatePergunta(i, 'texto', e.target.value)}
-                      placeholder="Texto da pergunta..."
-                      maxLength={1000}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-500 shrink-0">Peso:</label>
-                    <input
-                      type="number"
-                      value={q.peso}
-                      onChange={(e) => updatePergunta(i, 'peso', Number(e.target.value))}
-                      min={0.01}
-                      step={0.01}
-                      className="w-24 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                    />
-                    <div className="flex items-center gap-0.5 ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => movePergunta(i, -1)}
-                        disabled={i === 0}
-                        className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => movePergunta(i, 1)}
-                        disabled={i === perguntas.length - 1}
-                        className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removePergunta(i)}
-                        disabled={perguntas.length <= 1}
-                        className="p-1 text-red-400 hover:text-red-600 disabled:opacity-30"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+              <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-xs font-bold text-gray-400 pt-2 mt-1 w-6 text-center shrink-0">
+                    #{i + 1}
+                  </span>
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2">
+                      <input
+                        value={q.texto}
+                        onChange={(e) => updatePergunta(i, 'texto', e.target.value)}
+                        placeholder="Texto da pergunta..."
+                        maxLength={1000}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {q.opcoes.length === 0 ? (
+                        <>
+                          <label className="text-xs text-gray-500 shrink-0">Peso:</label>
+                          <input
+                            type="number"
+                            value={q.peso}
+                            onChange={(e) => updatePergunta(i, 'peso', Number(e.target.value))}
+                            min={0.01}
+                            step={0.01}
+                            className="w-24 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                          />
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-500">
+                          Peso: <strong>{derivedPeso(q)}</strong>
+                        </span>
+                      )}
+                      <div className="flex items-center gap-0.5 ml-auto">
+                        <button type="button" onClick={() => movePergunta(i, -1)} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">↑</button>
+                        <button type="button" onClick={() => movePergunta(i, 1)} disabled={i === perguntas.length - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">↓</button>
+                        <button type="button" onClick={() => removePergunta(i)} disabled={perguntas.length <= 1} className="p-1 text-red-400 hover:text-red-600 disabled:opacity-30">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                <div className="pl-9 space-y-1.5">
+                  {q.opcoes.map((o, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={o.valor}
+                        onChange={(e) => updateOpcao(i, oi, 'valor', Number(e.target.value))}
+                        min={1}
+                        className="w-14 px-2 py-1.5 border border-gray-300 rounded-lg text-xs text-center focus:ring-2 focus:ring-blue-500 outline-none"
+                        title="Valor da opção"
+                      />
+                      <input
+                        value={o.descricao}
+                        onChange={(e) => updateOpcao(i, oi, 'descricao', e.target.value)}
+                        placeholder="Descrição da opção..."
+                        maxLength={500}
+                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeOpcao(i, oi)}
+                        className="p-1 text-red-400 hover:text-red-600"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addOpcao(i)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    + Adicionar opção de resposta
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"

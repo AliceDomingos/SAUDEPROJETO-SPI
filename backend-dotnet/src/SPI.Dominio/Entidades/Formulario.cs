@@ -15,7 +15,7 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         string? descricao,
         int criadoPorUsuarioId,
         int? groupId,
-        IEnumerable<(string Texto, decimal Peso, int Ordem)> questions)
+        IEnumerable<(string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)> questions)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -59,7 +59,7 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         string nome,
         string? descricao,
         int? groupId,
-        IEnumerable<(string Texto, decimal Peso, int Ordem)> questions)
+        IEnumerable<(string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)> questions)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -80,7 +80,8 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         AtualizadoEm = DateTime.UtcNow;
     }
 
-    private void ReplaceQuestions(IEnumerable<(string Texto, decimal Peso, int Ordem)> questions)
+    private void ReplaceQuestions(
+        IEnumerable<(string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)> questions)
     {
         var list = questions
             .OrderBy(x => x.Ordem)
@@ -92,9 +93,14 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         }
 
         _questions.Clear();
-        foreach (var question in list)
+        foreach (var q in list)
         {
-            _questions.Add(new FormQuestion(question.Texto, question.Peso, question.Ordem));
+            var question = new FormQuestion(q.Texto, q.Peso, q.Ordem);
+            if (q.Opcoes is { Count: > 0 })
+            {
+                question.SetOptions(q.Opcoes);
+            }
+            _questions.Add(question);
         }
     }
 }
