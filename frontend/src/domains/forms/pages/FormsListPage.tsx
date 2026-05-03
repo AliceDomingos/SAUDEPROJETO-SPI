@@ -4,6 +4,7 @@ import { FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
 import { getForms } from '../api';
 import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
+import FormEditDialog from '../components/FormEditDialog';
 import PdfPreviewModal from '../components/PdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { exportFormToExcel, parseImportedJson } from '../utils/formExport';
@@ -16,6 +17,7 @@ export default function FormsListPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editFormId, setEditFormId] = useState<number | null>(null);
   const [importError, setImportError] = useState('');
   const [pdfPreviewForm, setPdfPreviewForm] = useState<Formulario | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,7 +67,7 @@ export default function FormsListPage() {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => navigate(`/formularios/${f.id}`)}
+            onClick={() => setEditFormId(f.id)}
             className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -188,6 +190,15 @@ export default function FormsListPage() {
         onClose={() => setShowCreateDialog(false)}
         onCreated={() => {
           setShowCreateDialog(false);
+          loadForms();
+        }}
+      />
+
+      <FormEditDialog
+        formId={editFormId}
+        onClose={() => setEditFormId(null)}
+        onSaved={() => {
+          setEditFormId(null);
           loadForms();
         }}
       />
