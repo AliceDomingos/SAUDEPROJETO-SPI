@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Pencil, Plus, Printer, Upload } from 'lucide-react';
+import { FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
 import { getForms } from '../api';
 import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
 import PdfPreviewModal from '../components/PdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
-import { parseImportedJson } from '../utils/formExport';
+import { exportFormToExcel, parseImportedJson } from '../utils/formExport';
 import { parseDocxForm } from '../utils/formDocxImport';
+import { parseExcelForm } from '../utils/formExcelImport';
 
 export default function FormsListPage() {
   const navigate = useNavigate();
@@ -41,8 +42,12 @@ export default function FormsListPage() {
     e.target.value = '';
     setImportError('');
     try {
-      const isDocx = file.name.toLowerCase().endsWith('.docx');
-      const data = isDocx ? await parseDocxForm(file) : await parseImportedJson(file);
+      const name = file.name.toLowerCase();
+      const data = name.endsWith('.docx')
+        ? await parseDocxForm(file)
+        : name.endsWith('.xlsx')
+          ? await parseExcelForm(file)
+          : await parseImportedJson(file);
       navigate('/formularios/novo', { state: data });
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Erro ao importar arquivo.');
@@ -74,6 +79,15 @@ export default function FormsListPage() {
           >
             <Printer className="h-3.5 w-3.5" />
             PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => exportFormToExcel(f)}
+            title="Exportar Excel"
+            className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-50"
+          >
+            <Sheet className="h-3.5 w-3.5" />
+            Excel
           </button>
         </div>
       ),
@@ -123,7 +137,7 @@ export default function FormsListPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,.docx"
+              accept=".json,.docx,.xlsx"
               className="hidden"
               onChange={handleImportFile}
             />
@@ -132,7 +146,7 @@ export default function FormsListPage() {
               className="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
             >
               <Upload className="w-4 h-4" />
-              Importar JSON
+              Importar
             </button>
             <button
               onClick={() => setShowCreateDialog(true)}

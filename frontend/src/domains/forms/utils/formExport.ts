@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import * as XLSX from 'xlsx';
 import type { Formulario } from '../types';
 
 export interface FormImportData {
@@ -244,6 +245,33 @@ export function exportFormToPdf(form: Formulario): void {
   doc.save(`${form.nome.replace(/[^a-zA-Z0-9\-_]/g, '_')}.pdf`);
 }
 
+
+export function exportFormToExcel(form: Formulario): void {
+  const maxOpcoes = Math.max(0, ...form.perguntas.map((q) => q.opcoes?.length ?? 0));
+
+  const rows = form.perguntas.map((q) => {
+    const row: Record<string, string | number> = {
+      nome: form.nome,
+      descricao: form.descricao ?? '',
+      pergunta_ordem: q.ordem,
+      pergunta_texto: q.texto,
+      pergunta_peso: q.opcoes && q.opcoes.length > 0 ? '' : q.peso,
+    };
+
+    for (let i = 0; i < maxOpcoes; i++) {
+      const o = q.opcoes?.[i];
+      row[`opcao_${i + 1}_valor`] = o ? o.valor : '';
+      row[`opcao_${i + 1}_descricao`] = o ? o.descricao : '';
+    }
+
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Formulário');
+  XLSX.writeFile(wb, `${form.nome.replace(/[^a-zA-Z0-9\-_]/g, '_')}.xlsx`);
+}
 
 export function parseImportedJson(file: File): Promise<FormImportData> {
   return new Promise((resolve, reject) => {
