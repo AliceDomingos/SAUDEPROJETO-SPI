@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, KeyRound, Pencil, Plus, UserX } from 'lucide-react';
+import { Eye, KeyRound, Pencil, Plus, Trash2, UserX } from 'lucide-react';
 import {
   createUser,
   deactivateUser,
@@ -82,42 +82,43 @@ export default function UsersPage() {
   const columns: Column<User>[] = [
     {
       header: 'Acoes',
+      sticky: true,
       render: (u) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <button
             type="button"
+            title="Visualizar"
             onClick={() => setDetailsUser(u)}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 p-2 text-gray-700 transition hover:bg-gray-50"
           >
             <Eye className="h-3.5 w-3.5" />
-            Visualizar
           </button>
           <button
             type="button"
+            title="Editar"
             onClick={() => setEditUser(u)}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+            className="rounded-lg border border-blue-200 p-2 text-blue-700 transition hover:bg-blue-50"
           >
             <Pencil className="h-3.5 w-3.5" />
-            Editar
           </button>
           {u.ativo && (
             <button
               type="button"
+              title="Enviar senha"
               onClick={() => setPasswordInviteTarget(u)}
-              className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-50"
+              className="rounded-lg border border-amber-200 p-2 text-amber-700 transition hover:bg-amber-50"
             >
               <KeyRound className="h-3.5 w-3.5" />
-              Enviar senha
             </button>
           )}
           {u.ativo && (
             <button
               type="button"
+              title="Desativar"
               onClick={() => setDeactivateTarget(u)}
-              className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+              className="rounded-lg border border-red-200 p-2 text-red-700 transition hover:bg-red-50"
             >
               <UserX className="h-3.5 w-3.5" />
-              Desativar
             </button>
           )}
         </div>
@@ -125,10 +126,12 @@ export default function UsersPage() {
     },
     {
       header: 'Nome',
+      sortKey: (u) => u.nome,
       render: (u) => <span className="font-medium text-gray-900">{u.nome}</span>,
     },
     {
       header: 'E-mail',
+      sortKey: (u) => u.email,
       render: (u) => <span className="text-gray-500">{u.email}</span>,
     },
     {
@@ -141,6 +144,7 @@ export default function UsersPage() {
     },
     {
       header: 'Status',
+      sortKey: (u) => (u.ativo ? 0 : 1),
       render: (u) => (
         <span className={`rounded-full px-2 py-1 text-xs font-bold ${statusBadgeCls(u.ativo)}`}>
           {u.ativo ? 'Ativo' : 'Inativo'}
@@ -149,6 +153,7 @@ export default function UsersPage() {
     },
     {
       header: 'Cadastro',
+      sortKey: (u) => u.criado_em,
       render: (u) => <span className="text-gray-500">{formatCreatedAt(u.criado_em)}</span>,
     },
   ];
@@ -206,6 +211,12 @@ export default function UsersPage() {
         onSubmit={handleEdit}
         groups={groups}
         isAdmin={isAdmin}
+      />
+      <UserPasswordInviteDialog
+        user={passwordInviteTarget}
+        open={passwordInviteTarget !== null}
+        onClose={() => setPasswordInviteTarget(null)}
+        onConfirm={handlePasswordInvite}
       />
       <UserPasswordInviteDialog
         user={passwordInviteTarget}

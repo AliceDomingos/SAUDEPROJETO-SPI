@@ -86,49 +86,54 @@ export default function GroupsPage() {
   const columns: Column<Group>[] = [
     {
       header: 'Acoes',
+      sticky: true,
       render: (g) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <button
             type="button"
+            title="Visualizar"
             onClick={() => setDetailsGroup(g)}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 p-2 text-gray-700 transition hover:bg-gray-50"
           >
             <Eye className="h-3.5 w-3.5" />
-            Visualizar
           </button>
           <button
             type="button"
+            title="Editar"
             onClick={() => setEditGroup(g)}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+            className="rounded-lg border border-blue-200 p-2 text-blue-700 transition hover:bg-blue-50"
           >
             <Pencil className="h-3.5 w-3.5" />
-            Editar
           </button>
           <button
             type="button"
+            title="Excluir"
             onClick={() => setDeleteGroupTarget(g)}
-            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+            className="rounded-lg border border-red-200 p-2 text-red-700 transition hover:bg-red-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Excluir
           </button>
         </div>
       ),
     },
     {
       header: 'Grupo',
+      sortKey: (g) => g.nome,
       render: (g) => <span className="font-medium text-gray-900">{g.nome}</span>,
     },
     {
       header: 'Gestor',
+      sortKey: (g) => g.gestor_nome ?? '',
       render: (g) => <span className="text-gray-600">{g.gestor_nome || 'Nao informado'}</span>,
     },
     {
       header: 'Membros',
+      sortKey: (g) => g.quantidade_membros,
       render: (g) => <span className="text-gray-600">{g.quantidade_membros}</span>,
     },
     {
       header: 'Status',
+      sortKey: (g) => (g.ativo ? 0 : 1),
       render: (g) => (
         <span className={`rounded-full px-2 py-1 text-xs font-bold ${getGroupStatusBadgeClass(g.ativo)}`}>
           {getGroupStatusLabel(g.ativo)}
@@ -137,6 +142,7 @@ export default function GroupsPage() {
     },
     {
       header: 'Cadastro',
+      sortKey: (g) => g.criado_em,
       render: (g) => <span className="text-gray-500">{formatGroupDate(g.criado_em)}</span>,
     },
   ];

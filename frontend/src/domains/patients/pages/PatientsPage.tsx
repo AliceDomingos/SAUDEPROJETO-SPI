@@ -102,33 +102,34 @@ export default function PatientsPage() {
   const columns: Column<Patient>[] = [
     {
       header: 'Acoes',
+      sticky: true,
       render: (p) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <button
             type="button"
+            title="Visualizar"
             onClick={() => setDetailsPatient(p)}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 p-2 text-gray-700 transition hover:bg-gray-50"
           >
             <Eye className="h-3.5 w-3.5" />
-            Visualizar
           </button>
           {canManagePatients() && (
             <>
               <button
                 type="button"
+                title="Editar"
                 onClick={() => setEditPatient(p)}
-                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+                className="rounded-lg border border-blue-200 p-2 text-blue-700 transition hover:bg-blue-50"
               >
                 <Pencil className="h-3.5 w-3.5" />
-                Editar
               </button>
               <button
                 type="button"
+                title="Excluir"
                 onClick={() => setDeletePatientTarget(p)}
-                className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+                className="rounded-lg border border-red-200 p-2 text-red-700 transition hover:bg-red-50"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Excluir
               </button>
             </>
           )}
@@ -137,6 +138,7 @@ export default function PatientsPage() {
     },
     {
       header: 'Paciente',
+      sortKey: (p) => p.nome,
       render: (p) => (
         <>
           <div className="font-medium text-gray-900">{p.nome}</div>
@@ -150,6 +152,7 @@ export default function PatientsPage() {
     },
     {
       header: 'Nascimento',
+      sortKey: (p) => p.data_nascimento ?? '',
       render: (p) => <span className="text-gray-600">{formatDate(p.data_nascimento)}</span>,
     },
     {
@@ -167,6 +170,7 @@ export default function PatientsPage() {
     },
     {
       header: 'Cadastro',
+      sortKey: (p) => p.criado_em,
       render: (p) => <span className="text-gray-500">{formatDate(p.criado_em)}</span>,
     },
   ];

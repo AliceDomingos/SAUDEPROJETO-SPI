@@ -40,6 +40,7 @@ export default function EvaluationsListPage() {
   const columns: Column<Evaluation>[] = [
     {
       header: 'Ações',
+      sticky: true,
       render: (e) => (
         <button
           type="button"
@@ -53,18 +54,22 @@ export default function EvaluationsListPage() {
     },
     {
       header: 'Paciente',
+      sortKey: (e) => e.patientNome,
       render: (e) => <span className="font-medium text-gray-900">{e.patientNome}</span>,
     },
     {
       header: 'Avaliador',
+      sortKey: (e) => e.avaliadorNome,
       render: (e) => <span className="text-gray-500">{e.avaliadorNome}</span>,
     },
     {
       header: 'Data',
+      sortKey: (e) => e.dataAvaliacao,
       render: (e) => <span className="text-gray-500">{new Date(e.dataAvaliacao).toLocaleDateString('pt-BR')}</span>,
     },
     {
       header: 'Score',
+      sortKey: (e) => e.scoreTotal,
       render: (e) => (
         <span className={`rounded-full px-2 py-1 text-xs font-bold ${badgeCls(e.scoreTotal)}`}>
           {e.scoreTotal}/60

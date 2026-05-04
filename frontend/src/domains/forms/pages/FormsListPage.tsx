@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
+import { Eye, FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
 import { getForms } from '../api';
 import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
+import FormDetailsDialog from '../components/FormDetailsDialog';
 import FormEditDialog from '../components/FormEditDialog';
 import PdfPreviewModal from '../components/PdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { exportFormToExcel, parseImportedJson } from '../utils/formExport';
 import { parseDocxForm } from '../utils/formDocxImport';
 import { parseExcelForm } from '../utils/formExcelImport';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function FormsListPage() {
   const navigate = useNavigate();
+  const canManageForms = useAuthStore((state) => state.canManageForms);
   const [forms, setForms] = useState<Formulario[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [detailsForm, setDetailsForm] = useState<Formulario | null>(null);
   const [editFormId, setEditFormId] = useState<number | null>(null);
   const [importError, setImportError] = useState('');
   const [pdfPreviewForm, setPdfPreviewForm] = useState<Formulario | null>(null);
@@ -63,20 +67,31 @@ export default function FormsListPage() {
   const columns: Column<Formulario>[] = [
     {
       header: 'Ações',
+      sticky: true,
       render: (f) => (
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setEditFormId(f.id)}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+            title="Visualizar"
+            onClick={() => setDetailsForm(f)}
+            className="rounded-lg border border-gray-300 p-2 text-gray-700 transition hover:bg-gray-50"
           >
-            <Pencil className="h-3.5 w-3.5" />
-            Editar
+            <Eye className="h-3.5 w-3.5" />
           </button>
+          {canManageForms() && (
+            <button
+              type="button"
+              title="Editar"
+              onClick={() => setEditFormId(f.id)}
+              className="rounded-lg border border-blue-200 p-2 text-blue-700 transition hover:bg-blue-50"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setPdfPreviewForm(f)}
             title="Visualizar PDF"
+            onClick={() => setPdfPreviewForm(f)}
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
           >
             <Printer className="h-3.5 w-3.5" />
@@ -84,8 +99,8 @@ export default function FormsListPage() {
           </button>
           <button
             type="button"
-            onClick={() => exportFormToExcel(f)}
             title="Exportar Excel"
+            onClick={() => exportFormToExcel(f)}
             className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-50"
           >
             <Sheet className="h-3.5 w-3.5" />
@@ -96,6 +111,7 @@ export default function FormsListPage() {
     },
     {
       header: 'Nome',
+      sortKey: (f) => f.nome,
       render: (f) => (
         <span className="flex items-center gap-2 font-medium text-gray-900">
           <FileText className="h-4 w-4 shrink-0 text-blue-500" />
@@ -109,20 +125,24 @@ export default function FormsListPage() {
     },
     {
       header: 'Grupo',
+      sortKey: (f) => f.groupNome ?? '',
       render: (f) => <span className="text-gray-500">{f.groupNome || '—'}</span>,
     },
     {
       header: 'Perguntas',
+      sortKey: (f) => f.perguntas.length,
       render: (f) => <span className="text-gray-600">{f.perguntas.length}</span>,
       className: 'text-center',
     },
     {
       header: 'Peso Total',
+      sortKey: (f) => f.pesoTotal,
       render: (f) => <span className="font-medium text-gray-900">{f.pesoTotal}</span>,
       className: 'text-center',
     },
     {
       header: 'Criado por',
+      sortKey: (f) => f.criadoPorNome,
       render: (f) => <span className="text-gray-500">{f.criadoPorNome}</span>,
     },
   ];
@@ -184,6 +204,12 @@ export default function FormsListPage() {
           />
         )}
       </div>
+
+      <FormDetailsDialog
+        form={detailsForm}
+        open={detailsForm !== null}
+        onClose={() => setDetailsForm(null)}
+      />
 
       <FormCreateDialog
         isOpen={showCreateDialog}
