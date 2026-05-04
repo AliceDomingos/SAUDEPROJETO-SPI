@@ -18,6 +18,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
     public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
     public DbSet<FormQuestionOption> FormQuestionOptions => Set<FormQuestionOption>();
+    public DbSet<FormClassificationRange> FormClassificationRanges => Set<FormClassificationRange>();
     public DbSet<Evaluation> Evaluations => Set<Evaluation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

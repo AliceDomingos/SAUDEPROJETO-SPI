@@ -27,6 +27,7 @@ public static class DatabaseInitializer
             await EnsureSqlitePatientColumnsAsync(context, cancellationToken);
             await EnsureSqliteOrganizationColumnsAsync(context, cancellationToken);
             await EnsureSqliteFormQuestionOptionsTableAsync(context, cancellationToken);
+            await EnsureSqliteFormClassificationRangesTableAsync(context, cancellationToken);
         }
         else if (databaseInitializationOptions.ApplyMigrationsOnStartup)
         {
@@ -182,6 +183,37 @@ public static class DatabaseInitializer
                 );
                 CREATE INDEX IX_form_question_options_form_question_id
                     ON form_question_options(form_question_id);
+                """,
+                cancellationToken);
+        }
+    }
+
+    private static async Task EnsureSqliteFormClassificationRangesTableAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var checkCmd = connection.CreateCommand();
+        checkCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='form_classification_ranges';";
+        var exists = await checkCmd.ExecuteScalarAsync(cancellationToken);
+
+        if (exists is null)
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE form_classification_ranges (
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    form_template_id INTEGER NOT NULL,
+                    score_min        REAL NOT NULL,
+                    score_max        REAL NOT NULL,
+                    rotulo           TEXT NOT NULL,
+                    FOREIGN KEY (form_template_id) REFERENCES form_templates(id) ON DELETE CASCADE
+                );
+                CREATE INDEX IX_form_classification_ranges_form_template_id
+                    ON form_classification_ranges(form_template_id);
                 """,
                 cancellationToken);
         }

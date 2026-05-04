@@ -15,6 +15,8 @@ public sealed class UpdateFormRequestDto
 
     [Required]
     public IReadOnlyCollection<FormQuestionRequestDto> Perguntas { get; init; } = [];
+
+    public IReadOnlyCollection<FormClassificationRangeRequestDto> Faixas { get; init; } = [];
 }
 
 

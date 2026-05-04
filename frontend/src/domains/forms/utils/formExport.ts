@@ -11,6 +11,7 @@ export interface FormImportData {
     ordem: number;
     opcoes?: Array<{ valor: number; descricao: string }>;
   }>;
+  faixas?: Array<{ scoreMin: number; scoreMax: number; rotulo: string }>;
 }
 
 function buildPdfDoc(form: Formulario): jsPDF {
@@ -270,6 +271,17 @@ export function exportFormToExcel(form: Formulario): void {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Formulário');
+
+  if (form.faixas && form.faixas.length > 0) {
+    const faixaRows = form.faixas.map((f) => ({
+      score_min: f.scoreMin,
+      score_max: f.scoreMax,
+      rotulo: f.rotulo,
+    }));
+    const wsFaixas = XLSX.utils.json_to_sheet(faixaRows);
+    XLSX.utils.book_append_sheet(wb, wsFaixas, 'Faixas');
+  }
+
   XLSX.writeFile(wb, `${form.nome.replace(/[^a-zA-Z0-9\-_]/g, '_')}.xlsx`);
 }
 
@@ -294,6 +306,14 @@ export function parseImportedJson(file: File): Promise<FormImportData> {
         if (!perguntasValidas) {
           reject(new Error('Arquivo inválido: perguntas com formato incorreto.'));
           return;
+        }
+        if (data.faixas !== undefined) {
+          if (!Array.isArray(data.faixas) || !data.faixas.every(
+            (f) => typeof f.scoreMin === 'number' && typeof f.scoreMax === 'number' && typeof f.rotulo === 'string'
+          )) {
+            reject(new Error('Arquivo inválido: faixas de classificação com formato incorreto.'));
+            return;
+          }
         }
         resolve(data);
       } catch {

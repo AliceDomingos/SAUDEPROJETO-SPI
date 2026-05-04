@@ -14,6 +14,7 @@ public sealed class FormResponseDto
     public DateTime CriadoEm { get; init; }
     public DateTime AtualizadoEm { get; init; }
     public IReadOnlyCollection<FormQuestionResponseDto> Perguntas { get; init; } = [];
+    public IReadOnlyCollection<FormClassificationRangeResponseDto> Faixas { get; init; } = [];
 }
 
 

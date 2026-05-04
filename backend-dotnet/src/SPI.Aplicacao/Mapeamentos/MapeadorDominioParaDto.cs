@@ -116,6 +116,15 @@ public static class DomainToDtoMapper
                     .Select(o => new FormQuestionOptionResponseDto { Valor = o.Valor, Descricao = o.Descricao })
                     .ToArray()
             })
+            .ToArray(),
+        Faixas = form.ClassificationRanges
+            .OrderBy(x => x.ScoreMin)
+            .Select(x => new FormClassificationRangeResponseDto
+            {
+                ScoreMin = x.ScoreMin,
+                ScoreMax = x.ScoreMax,
+                Rotulo = x.Rotulo
+            })
             .ToArray()
     };
 }

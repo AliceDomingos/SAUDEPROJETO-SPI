@@ -49,7 +49,20 @@ export function parseExcelForm(file: File): Promise<FormImportData> {
 
         if (perguntas.length === 0) throw new Error('Nenhuma pergunta encontrada na planilha.');
 
-        resolve({ nome, descricao, perguntas });
+        const faixas: FormImportData['faixas'] = [];
+        const faixasSheetName = wb.SheetNames.find((n) => n.toLowerCase() === 'faixas');
+        if (faixasSheetName) {
+          const wsFaixas = wb.Sheets[faixasSheetName];
+          const faixaRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wsFaixas);
+          for (const row of faixaRows) {
+            const scoreMin = Number(row['score_min'] ?? 0);
+            const scoreMax = Number(row['score_max'] ?? 0);
+            const rotulo = String(row['rotulo'] ?? '').trim();
+            if (rotulo) faixas.push({ scoreMin, scoreMax, rotulo });
+          }
+        }
+
+        resolve({ nome, descricao, perguntas, faixas: faixas.length > 0 ? faixas : undefined });
       } catch (err) {
         reject(err instanceof Error ? err : new Error('Erro ao ler arquivo Excel.'));
       }

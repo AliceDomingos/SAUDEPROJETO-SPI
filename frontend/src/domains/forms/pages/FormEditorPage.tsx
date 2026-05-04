@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { createForm, updateForm, getFormById, getGrupos } from '../api';
-import type { FormQuestion, FormQuestionOption, Grupo } from '../types';
+import type { FormQuestion, FormQuestionOption, FaixaClassificacao, Grupo } from '../types';
 import type { FormImportData } from '../utils/formExport';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 
@@ -19,6 +19,7 @@ export default function FormEditorPage() {
   const [descricao, setDescricao] = useState('');
   const [groupId, setGroupId] = useState<number | ''>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
+  const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,6 +40,7 @@ export default function FormEditorPage() {
         ? state.perguntas.map((q, i) => ({ ...q, ordem: i + 1, ativa: true, opcoes: q.opcoes ?? [] }))
         : [emptyQuestion()]
     );
+    setFaixas(state.faixas ?? []);
   }, []);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function FormEditorPage() {
             ? form.perguntas.map((q, i) => ({ ...q, ordem: i + 1, opcoes: q.opcoes ?? [] }))
             : [emptyQuestion()]
         );
+        setFaixas(form.faixas ?? []);
       })
       .catch(() => setError('Formulário não encontrado'))
       .finally(() => setLoading(false));
@@ -123,6 +126,22 @@ export default function FormEditorPage() {
     });
   }
 
+  function addFaixa() {
+    setFaixas((prev) => [...prev, { scoreMin: 0, scoreMax: 0, rotulo: '' }]);
+  }
+
+  function removeFaixa(index: number) {
+    setFaixas((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateFaixa(index: number, field: keyof FaixaClassificacao, value: string | number) {
+    setFaixas((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -145,6 +164,7 @@ export default function FormEditorPage() {
           ordem: i + 1,
           opcoes: q.opcoes,
         })),
+        faixas: faixas.filter((f) => f.rotulo.trim().length > 0),
       };
 
       if (isEdit) {
@@ -332,6 +352,72 @@ export default function FormEditorPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700">Faixas de Classificação</h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Define o resultado com base na soma dos pesos. Ex: 30 a 33 → "Autismo Leve".
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addFaixa}
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+            >
+              <Plus className="w-3 h-3" />
+              Adicionar faixa
+            </button>
+          </div>
+
+          {faixas.length === 0 ? (
+            <p className="text-xs text-gray-400 text-center py-2">
+              Nenhuma faixa definida. Clique em "Adicionar faixa" para configurar as classificações.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <div className="grid grid-cols-[80px_80px_1fr_32px] gap-2 px-1">
+                <span className="text-xs font-medium text-gray-500">De</span>
+                <span className="text-xs font-medium text-gray-500">Até</span>
+                <span className="text-xs font-medium text-gray-500">Classificação</span>
+                <span />
+              </div>
+              {faixas.map((f, i) => (
+                <div key={i} className="grid grid-cols-[80px_80px_1fr_32px] gap-2 items-center">
+                  <input
+                    type="number"
+                    value={f.scoreMin}
+                    onChange={(e) => updateFaixa(i, 'scoreMin', Number(e.target.value))}
+                    step={0.5}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                  />
+                  <input
+                    type="number"
+                    value={f.scoreMax}
+                    onChange={(e) => updateFaixa(i, 'scoreMax', Number(e.target.value))}
+                    step={0.5}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                  />
+                  <input
+                    value={f.rotulo}
+                    onChange={(e) => updateFaixa(i, 'rotulo', e.target.value)}
+                    placeholder="Ex: Autismo Leve"
+                    maxLength={200}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFaixa(i)}
+                    className="p-1 text-red-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3">

@@ -98,7 +98,8 @@ public sealed class FormsAppService : IFormsAppService
             request.Descricao,
             actor.Id,
             request.GroupId,
-            request.Perguntas.Select(x => BuildQuestionTuple(x)));
+            request.Perguntas.Select(x => BuildQuestionTuple(x)),
+            request.Faixas.Select(f => (f.ScoreMin, f.ScoreMax, f.Rotulo)));
 
         if (actor.Role == UserRole.Admin && actor.OrganizationId.HasValue)
         {
@@ -141,7 +142,8 @@ public sealed class FormsAppService : IFormsAppService
             request.Nome,
             request.Descricao,
             request.GroupId,
-            request.Perguntas.Select(x => BuildQuestionTuple(x)));
+            request.Perguntas.Select(x => BuildQuestionTuple(x)),
+            request.Faixas.Select(f => (f.ScoreMin, f.ScoreMax, f.Rotulo)));
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

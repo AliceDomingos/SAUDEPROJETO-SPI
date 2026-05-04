@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { updateForm, getFormById, getGrupos } from '../api';
-import type { FormQuestion, FormQuestionOption, Grupo } from '../types';
+import type { FormQuestion, FormQuestionOption, FaixaClassificacao, Grupo } from '../types';
 import { Plus, Trash2, Save } from 'lucide-react';
 import Dialog from '@/shared/components/dialog/Dialog';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -23,6 +23,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
   const [descricao, setDescricao] = useState('');
   const [groupId, setGroupId] = useState<number | ''>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
+  const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,6 +35,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
       setDescricao('');
       setGroupId('');
       setPerguntas([emptyQuestion()]);
+      setFaixas([]);
       setError('');
       return;
     }
@@ -54,6 +56,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
             ? form.perguntas.map((q, i) => ({ ...q, ordem: i + 1, opcoes: q.opcoes ?? [] }))
             : [emptyQuestion()]
         );
+        setFaixas(form.faixas ?? []);
       })
       .catch(() => setError('Não foi possível carregar o formulário.'))
       .finally(() => setLoading(false));
@@ -125,6 +128,22 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
     });
   }
 
+  function addFaixa() {
+    setFaixas((prev) => [...prev, { scoreMin: 0, scoreMax: 0, rotulo: '' }]);
+  }
+
+  function removeFaixa(index: number) {
+    setFaixas((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateFaixa(index: number, field: keyof FaixaClassificacao, value: string | number) {
+    setFaixas((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -149,6 +168,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
           ordem: i + 1,
           opcoes: q.opcoes,
         })),
+        faixas: faixas.filter((f) => f.rotulo.trim().length > 0),
       });
       onSaved();
     } catch (err) {
@@ -347,6 +367,72 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700">Faixas de Classificação</h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Define o resultado com base na soma dos pesos. Ex: 30 a 33 → "Autismo Leve".
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addFaixa}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                <Plus className="w-3 h-3" />
+                Adicionar faixa
+              </button>
+            </div>
+
+            {faixas.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-1">
+                Nenhuma faixa definida.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-[72px_72px_1fr_28px] gap-2 px-1">
+                  <span className="text-xs font-medium text-gray-500">De</span>
+                  <span className="text-xs font-medium text-gray-500">Até</span>
+                  <span className="text-xs font-medium text-gray-500">Classificação</span>
+                  <span />
+                </div>
+                {faixas.map((f, i) => (
+                  <div key={i} className="grid grid-cols-[72px_72px_1fr_28px] gap-2 items-center">
+                    <input
+                      type="number"
+                      value={f.scoreMin}
+                      onChange={(e) => updateFaixa(i, 'scoreMin', Number(e.target.value))}
+                      step={0.5}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                    />
+                    <input
+                      type="number"
+                      value={f.scoreMax}
+                      onChange={(e) => updateFaixa(i, 'scoreMax', Number(e.target.value))}
+                      step={0.5}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                    />
+                    <input
+                      value={f.rotulo}
+                      onChange={(e) => updateFaixa(i, 'rotulo', e.target.value)}
+                      placeholder="Ex: Autismo Leve"
+                      maxLength={200}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFaixa(i)}
+                      className="p-1 text-red-400 hover:text-red-600"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </form>
       )}
