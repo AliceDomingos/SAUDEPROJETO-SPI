@@ -13,7 +13,7 @@ export default function QuestionCard({ question, value, onChange }: QuestionCard
     <div className={`bg-white rounded-xl border-2 p-5 transition-all ${value ? 'border-blue-300 shadow-md' : 'border-gray-200'}`}>
       <div className="flex items-center gap-3 mb-4">
         <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-          {question.id}
+          {question.ordem ?? question.id}
         </span>
         <h3 className="text-base font-semibold">{question.name}</h3>
       </div>

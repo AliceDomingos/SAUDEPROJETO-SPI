@@ -43,8 +43,11 @@ export interface Evaluation {
   patientNome: string;
   avaliadorId: number;
   avaliadorNome: string;
+  formId?: number;
+  formNome?: string;
   respostas: Record<number, number>;
   scoreTotal: number;
+  pesoTotal: number;
   classificacao: string;
   dataAvaliacao: string;
 }

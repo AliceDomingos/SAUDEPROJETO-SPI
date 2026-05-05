@@ -81,10 +81,9 @@ public sealed class Evaluation : Entity, IAggregateRoot
         FormTemplateId = formTemplateId;
         Respostas = respostas ?? throw new InvalidOperationException("Respostas obrigatorias.");
         PesoTotal = questions.Sum(x => x.Peso);
-        ScoreTotal = Math.Round(
-            questions.Where(x => Respostas.ContainsKey(x.Id)).Sum(x => x.Peso * Respostas[x.Id]),
-            2,
-            MidpointRounding.AwayFromZero);
+        ScoreTotal = questions
+            .Where(x => Respostas.ContainsKey(x.Id))
+            .Sum(x => Respostas[x.Id]);
         Classificacao = "formulario";
         DataAvaliacao = DateTime.UtcNow;
     }

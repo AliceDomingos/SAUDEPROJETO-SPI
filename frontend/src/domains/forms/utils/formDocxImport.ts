@@ -1,8 +1,8 @@
 import JSZip from 'jszip';
 import type { FormImportData } from './formExport';
 
-const OPTION_REGEX = /^(\d+)\s*[-–]\s*(.+)$/;
-const STOP_MARKERS = ['impressões gerais', 'pontuaç'];
+const OPTION_REGEX = /^(\d+)\s*[-–.]\s*(.+)$/;
+const STOP_MARKERS = ['pontuaç'];
 const HEADER_SKIP = /^(nome\s+da|data\s+da)/i;
 
 async function extractParagraphs(file: File): Promise<string[]> {

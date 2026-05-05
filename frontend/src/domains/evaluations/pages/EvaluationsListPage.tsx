@@ -4,6 +4,7 @@ import { getEvals } from '@/domains/dashboard/api';
 import type { Evaluation } from '@/types';
 import { Eye, Plus } from 'lucide-react';
 import EvaluationCreateDialog from '../components/EvaluationCreateDialog';
+import EvaluationDetailDialog from '../components/EvaluationDetailDialog';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { useAuthStore } from '@/shared/store/authStore';
 
@@ -14,6 +15,7 @@ export default function EvaluationsListPage() {
   const [evals, setEvals] = useState<Evaluation[]>([]);
   const [filter, setFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectedEvalId, setSelectedEvalId] = useState<number | null>(null);
 
   useEffect(() => {
     getEvals().then((data: Evaluation[]) => setEvals(data));
@@ -44,7 +46,7 @@ export default function EvaluationsListPage() {
       render: (e) => (
         <button
           type="button"
-          onClick={() => navigate(`/avaliacoes/${e.id}`)}
+          onClick={() => setSelectedEvalId(e.id)}
           className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
         >
           <Eye className="h-3.5 w-3.5" />
@@ -72,7 +74,7 @@ export default function EvaluationsListPage() {
       sortKey: (e) => e.scoreTotal,
       render: (e) => (
         <span className={`rounded-full px-2 py-1 text-xs font-bold ${badgeCls(e.scoreTotal)}`}>
-          {e.scoreTotal}/60
+          {e.scoreTotal}/{e.pesoTotal}
         </span>
       ),
     },
@@ -111,6 +113,7 @@ export default function EvaluationsListPage() {
       />
 
       {canCreateEvaluations() && <EvaluationCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />}
+      <EvaluationDetailDialog evalId={selectedEvalId} onClose={() => setSelectedEvalId(null)} />
     </div>
   );
 }

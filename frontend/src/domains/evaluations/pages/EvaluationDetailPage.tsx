@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEvals } from '@/domains/dashboard/api';
+import { getFormById } from '@/domains/forms/api';
 import type { Evaluation } from '@/types';
 import ScoreChart from '../components/ScoreChart';
 import { SPI_QUESTIONS } from '../utils/questions';
@@ -10,11 +11,20 @@ export default function EvaluationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [evalData, setEvalData] = useState<Evaluation | null>(null);
+  const [formQuestions, setFormQuestions] = useState<{ id: number; name: string }[] | null>(null);
 
   useEffect(() => {
     getEvals().then((data: Evaluation[]) => {
       const found = data.find((e: Evaluation) => e.id === Number(id));
       setEvalData(found || null);
+      if (found?.formId) {
+        getFormById(found.formId).then((form) => {
+          const qs = form.perguntas
+            .sort((a, b) => a.ordem - b.ordem)
+            .map((p) => ({ id: p.id!, name: p.texto }));
+          setFormQuestions(qs);
+        }).catch(() => setFormQuestions(null));
+      }
     });
   }, [id]);
 
@@ -67,23 +77,23 @@ export default function EvaluationDetailPage() {
 
       {/* Score */}
       <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-sm text-gray-500 mb-2">Pontuação Total (máx. 60)</p>
+        <p className="text-sm text-gray-500 mb-2">Pontuação Total (máx. {evalData.pesoTotal})</p>
         <p className="text-5xl font-extrabold" style={{ color: scoreColor }}>
           {score}
         </p>
         <p className={`inline-block px-4 py-2 rounded-full font-bold text-sm mt-3 ${clsBg}`}>
-          {score}/60 — {evalData.classificacao}
+          {score}/{evalData.pesoTotal} — {evalData.classificacao}
         </p>
       </div>
 
       {/* Radar */}
-      <ScoreChart respostas={evalData.respostas} />
+      <ScoreChart respostas={evalData.respostas} questions={formQuestions ?? undefined} />
 
       {/* Breakdown */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Detalhamento por Dimensão</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {SPI_QUESTIONS.map((q) => {
+          {(formQuestions ?? SPI_QUESTIONS).map((q) => {
             const v = evalData.respostas[q.id] || 0;
             return (
               <div key={q.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">

@@ -9,10 +9,12 @@ import { SPI_QUESTIONS } from '../utils/questions';
 
 interface ScoreChartProps {
   respostas: Record<number, number>;
+  questions?: { id: number; name: string }[];
 }
 
-export default function ScoreChart({ respostas }: ScoreChartProps) {
-  const data = SPI_QUESTIONS.map((q) => ({
+export default function ScoreChart({ respostas, questions }: ScoreChartProps) {
+  const qs = questions ?? SPI_QUESTIONS;
+  const data = qs.map((q) => ({
     dimensao: q.name,
     score: respostas[q.id] || 0,
   }));

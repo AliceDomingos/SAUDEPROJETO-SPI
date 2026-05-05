@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createForm, getGrupos } from '../api';
 import type { FormQuestion, FormQuestionOption, FaixaClassificacao, Grupo } from '../types';
+import type { FormImportData } from '../utils/formExport';
 import { Plus, Trash2, Save } from 'lucide-react';
 import Dialog from '@/shared/components/dialog/Dialog';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -13,9 +14,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onCreated: () => void;
+  initialData?: FormImportData;
 }
 
-export default function FormCreateDialog({ isOpen, onClose, onCreated }: Props) {
+export default function FormCreateDialog({ isOpen, onClose, onCreated, initialData }: Props) {
   const isAdmin = useAuthStore((s) => s.isAdmin());
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -42,6 +44,19 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated }: Props) 
       setDescricao('');
       setGroupId('');
       setPerguntas([emptyQuestion()]);
+      setFaixas([]);
+      setError('');
+    } else if (initialData) {
+      setNome(initialData.nome);
+      setPerguntas(
+        initialData.perguntas.map((p, i) => ({
+          texto: p.texto,
+          peso: p.peso,
+          ordem: i + 1,
+          ativa: true,
+          opcoes: p.opcoes ?? [],
+        }))
+      );
       setFaixas([]);
       setError('');
     }

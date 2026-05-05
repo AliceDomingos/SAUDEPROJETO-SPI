@@ -4,11 +4,13 @@ import { SPI_QUESTIONS } from '../utils/questions';
 
 interface ResultState {
   score: number;
+  pesoTotal: number;
   classification: string;
   color: string;
   cls: string;
   patientId: number;
   answers: Record<number, number>;
+  questions?: { id: number; name: string }[];
 }
 
 export default function EvaluationResultPage() {
@@ -20,7 +22,7 @@ export default function EvaluationResultPage() {
     return null;
   }
 
-  const { score, classification, color, cls, answers }: ResultState = state;
+  const { score, pesoTotal, classification, color, cls, answers, questions }: ResultState = state;
   const labels = ['Normal', 'Leve', 'Moderado', 'Grave'];
 
   return (
@@ -28,7 +30,7 @@ export default function EvaluationResultPage() {
       <h2 className="text-xl font-bold">Resultado</h2>
 
       <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-        <p className="mb-2 text-sm text-gray-500">Pontuacao Total (max. 60)</p>
+        <p className="mb-2 text-sm text-gray-500">Pontuacao Total (max. {pesoTotal})</p>
         <p className="text-5xl font-extrabold" style={{ color }}>
           {score}
         </p>
@@ -41,16 +43,16 @@ export default function EvaluationResultPage() {
                 : 'bg-red-100 text-red-700'
           }`}
         >
-          {score}/60 - {classification}
+          {score}/{pesoTotal} - {classification}
         </p>
       </div>
 
-      <ScoreChart respostas={answers} />
+      <ScoreChart respostas={answers} questions={questions} />
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">Detalhamento por Dimensao</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {SPI_QUESTIONS.map((q) => {
+          {(questions ?? SPI_QUESTIONS).map((q) => {
             const v = answers[q.id] || 0;
             return (
               <div key={q.id} className="flex items-center gap-2 rounded-lg bg-gray-50 p-2">

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
 import { getForms } from '../api';
 import type { Formulario } from '../types';
@@ -8,18 +7,18 @@ import FormDetailsDialog from '../components/FormDetailsDialog';
 import FormEditDialog from '../components/FormEditDialog';
 import PdfPreviewModal from '../components/PdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
-import { exportFormToExcel, parseImportedJson } from '../utils/formExport';
+import { exportFormToExcel, parseImportedJson, type FormImportData } from '../utils/formExport';
 import { parseDocxForm } from '../utils/formDocxImport';
 import { parseExcelForm } from '../utils/formExcelImport';
 import { useAuthStore } from '@/shared/store/authStore';
 
 export default function FormsListPage() {
-  const navigate = useNavigate();
   const canManageForms = useAuthStore((state) => state.canManageForms);
   const [forms, setForms] = useState<Formulario[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [importedData, setImportedData] = useState<FormImportData | undefined>(undefined);
   const [detailsForm, setDetailsForm] = useState<Formulario | null>(null);
   const [editFormId, setEditFormId] = useState<number | null>(null);
   const [importError, setImportError] = useState('');
@@ -54,7 +53,8 @@ export default function FormsListPage() {
         : name.endsWith('.xlsx')
           ? await parseExcelForm(file)
           : await parseImportedJson(file);
-      navigate('/formularios/novo', { state: data });
+      setImportedData(data);
+      setShowCreateDialog(true);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Erro ao importar arquivo.');
     }
@@ -213,11 +213,13 @@ export default function FormsListPage() {
 
       <FormCreateDialog
         isOpen={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
+        onClose={() => { setShowCreateDialog(false); setImportedData(undefined); }}
         onCreated={() => {
           setShowCreateDialog(false);
+          setImportedData(undefined);
           loadForms();
         }}
+        initialData={importedData}
       />
 
       <FormEditDialog
