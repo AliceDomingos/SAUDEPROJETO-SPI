@@ -100,7 +100,8 @@ public sealed class EvaluationsAppService : IEvaluationsAppService
                 patient.GroupId,
                 form.Id,
                 request.Respostas,
-                form.Questions.ToArray());
+                form.Questions.ToArray(),
+                form.ClassificationRanges.ToArray());
         }
         else
         {
@@ -150,9 +151,9 @@ public sealed class EvaluationsAppService : IEvaluationsAppService
             LastMonth = list.Count(x => x.DataAvaliacao >= DateTime.UtcNow.AddMonths(-1)),
             ClassificationDistribution = new ClassificationDistributionDto
             {
-                SemIndicativo = list.Count(x => x.Classificacao == "Sem indicativo"),
-                TeaLeveModerado = list.Count(x => x.Classificacao == "TEA leve/moderado"),
-                TeaGrave = list.Count(x => x.Classificacao == "TEA grave" || x.Classificacao == "formulario")
+                SemIndicativo = list.Count(x => x.Classificacao == "Sem indicativo de TEA"),
+                TeaLeveModerado = list.Count(x => x.Classificacao == "TEA Leve a Moderado"),
+                TeaGrave = list.Count(x => x.Classificacao == "TEA Grave")
             },
             RecentEvaluations = list.Take(5).ToList()
         };

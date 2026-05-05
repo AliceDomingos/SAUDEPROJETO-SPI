@@ -17,6 +17,14 @@ export async function updateForm(id: number, data: CriarFormularioPayload): Prom
   return api.put(`/api/forms/${id}`, data).then((r) => r.data);
 }
 
+export async function deactivateForm(id: number): Promise<void> {
+  return api.delete(`/api/forms/${id}`).then(() => {});
+}
+
+export async function activateForm(id: number): Promise<void> {
+  return api.patch(`/api/forms/${id}/activate`).then(() => {});
+}
+
 export async function getGrupos(): Promise<Grupo[]> {
   return api.get('/api/groups').then((r) => r.data);
 }

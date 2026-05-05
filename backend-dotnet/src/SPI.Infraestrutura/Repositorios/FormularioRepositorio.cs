@@ -21,6 +21,7 @@ public sealed class FormRepository : IFormRepository
             .Include(x => x.CriadoPorUsuario)
             .Include(x => x.Questions).ThenInclude(q => q.Options)
             .Include(x => x.ClassificationRanges)
+            .Where(x => x.Ativo)
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
@@ -31,7 +32,7 @@ public sealed class FormRepository : IFormRepository
             .Include(x => x.CriadoPorUsuario)
             .Include(x => x.Questions).ThenInclude(q => q.Options)
             .Include(x => x.ClassificationRanges)
-            .Where(x => x.GroupId == null || groupIds.Contains(x.GroupId.Value))
+            .Where(x => x.Ativo && (x.GroupId == null || groupIds.Contains(x.GroupId.Value)))
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
@@ -42,7 +43,7 @@ public sealed class FormRepository : IFormRepository
             .Include(x => x.CriadoPorUsuario)
             .Include(x => x.Questions).ThenInclude(q => q.Options)
             .Include(x => x.ClassificationRanges)
-            .Where(x => x.OrganizationId == organizationId)
+            .Where(x => x.Ativo && x.OrganizationId == organizationId)
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 

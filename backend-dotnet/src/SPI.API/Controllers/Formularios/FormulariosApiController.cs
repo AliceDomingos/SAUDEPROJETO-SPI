@@ -52,6 +52,22 @@ public sealed class FormsController : ControllerBase
         var result = await _formsAppService.UpdateAsync(formId, request, User.GetUserId(), cancellationToken);
         return Ok(result);
     }
+
+    [HttpDelete("{formId:int}")]
+    [Authorize(Policy = "FormManagement")]
+    public async Task<IActionResult> Deactivate(int formId, CancellationToken cancellationToken)
+    {
+        await _formsAppService.DeactivateAsync(formId, User.GetUserId(), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPatch("{formId:int}/activate")]
+    [Authorize(Policy = "FormManagement")]
+    public async Task<IActionResult> Activate(int formId, CancellationToken cancellationToken)
+    {
+        await _formsAppService.ActivateAsync(formId, User.GetUserId(), cancellationToken);
+        return NoContent();
+    }
 }
 
 

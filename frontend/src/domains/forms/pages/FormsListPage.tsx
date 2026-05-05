@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Eye, FileText, Pencil, Plus, Printer, Sheet, Upload } from 'lucide-react';
-import { getForms } from '../api';
+import { Eye, FileText, Filter, Pencil, Plus, Printer, Sheet, Upload, PowerOff, Power } from 'lucide-react';
+import { getForms, deactivateForm, activateForm } from '../api';
 import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
 import FormDetailsDialog from '../components/FormDetailsDialog';
@@ -23,11 +23,21 @@ export default function FormsListPage() {
   const [editFormId, setEditFormId] = useState<number | null>(null);
   const [importError, setImportError] = useState('');
   const [pdfPreviewForm, setPdfPreviewForm] = useState<Formulario | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'ativo' | 'inativo'>('ativo');
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadForms();
   }, []);
+
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+    function handleClickOutside() { setStatusDropdownOpen(false); }
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [statusDropdownOpen]);
 
   async function loadForms() {
     setLoading(true);
@@ -60,8 +70,84 @@ export default function FormsListPage() {
     }
   }
 
-  const filtered = forms.filter((f) =>
-    f.nome.toLowerCase().includes(filter.toLowerCase())
+  async function handleToggleAtivo(f: Formulario) {
+    const acao = f.ativo ? 'desativar' : 'reativar';
+    if (!window.confirm(`Deseja ${acao} o formulário "${f.nome}"?`)) return;
+    setTogglingId(f.id);
+    try {
+      if (f.ativo) await deactivateForm(f.id);
+      else await activateForm(f.id);
+      await loadForms();
+    } catch {
+      // silently fail
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
+  const filtered = forms.filter((f) => {
+    if (!f.nome.toLowerCase().includes(filter.toLowerCase())) return false;
+    if (statusFilter === 'ativo') return f.ativo;
+    if (statusFilter === 'inativo') return !f.ativo;
+    return true;
+  });
+
+  const statusOptions = [
+    { value: 'ativo', label: 'Ativo' },
+    { value: 'inativo', label: 'Inativo' },
+  ] as const;
+
+  const statusHeader = (
+    <div className="relative flex items-center gap-1">
+      <span>Status</span>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setStatusDropdownOpen((v) => !v); }}
+        className={`rounded p-0.5 transition hover:bg-gray-200 ${statusFilter !== 'todos' ? 'text-blue-600' : 'text-gray-400'}`}
+      >
+        <Filter className="h-3.5 w-3.5" />
+      </button>
+      {statusDropdownOpen && (
+        <div
+          className="absolute left-0 top-7 z-30 w-44 rounded-xl border border-gray-200 bg-white shadow-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+            <button
+              type="button"
+              onClick={() => { setStatusFilter('todos'); setStatusDropdownOpen(false); }}
+              className="text-xs font-medium text-blue-600 hover:underline"
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => { setStatusFilter('todos'); setStatusDropdownOpen(false); }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Limpar
+            </button>
+          </div>
+          <div className="p-2 space-y-1">
+            {statusOptions.map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="statusFilter"
+                  checked={statusFilter === opt.value}
+                  onChange={() => { setStatusFilter(opt.value); setStatusDropdownOpen(false); }}
+                  className="accent-blue-600"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+          <div className="border-t border-gray-100 px-3 py-1.5 text-xs text-gray-400">
+            {statusFilter === 'todos' ? '0 de 2 selecionados' : '1 de 2 selecionados'}
+          </div>
+        </div>
+      )}
+    </div>
   );
 
   const columns: Column<Formulario>[] = [
@@ -106,6 +192,21 @@ export default function FormsListPage() {
             <Sheet className="h-3.5 w-3.5" />
             Excel
           </button>
+          {canManageForms() && (
+            <button
+              type="button"
+              title={f.ativo ? 'Desativar' : 'Reativar'}
+              onClick={() => handleToggleAtivo(f)}
+              disabled={togglingId === f.id}
+              className={`rounded-lg border p-2 transition disabled:opacity-50 ${
+                f.ativo
+                  ? 'border-red-200 text-red-600 hover:bg-red-50'
+                  : 'border-gray-300 text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              {f.ativo ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
+            </button>
+          )}
         </div>
       ),
     },
@@ -144,6 +245,17 @@ export default function FormsListPage() {
       header: 'Criado por',
       sortKey: (f) => f.criadoPorNome,
       render: (f) => <span className="text-gray-500">{f.criadoPorNome}</span>,
+    },
+    {
+      header: statusHeader,
+      sortKey: (f) => (f.ativo ? 1 : 0),
+      render: (f) => (
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          f.ativo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+        }`}>
+          {f.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      ),
     },
   ];
 

@@ -42,7 +42,8 @@ public sealed class Evaluation : Entity, IAggregateRoot
         int groupId,
         int formTemplateId,
         Dictionary<int, int> respostas,
-        IReadOnlyCollection<FormQuestion> questions)
+        IReadOnlyCollection<FormQuestion> questions,
+        IReadOnlyCollection<FormClassificationRange> classificationRanges)
     {
         if (patientId <= 0)
         {
@@ -84,7 +85,7 @@ public sealed class Evaluation : Entity, IAggregateRoot
         ScoreTotal = questions
             .Where(x => Respostas.ContainsKey(x.Id))
             .Sum(x => Respostas[x.Id]);
-        Classificacao = "formulario";
+        Classificacao = SPIClassificationService.ClassifyWithRanges(ScoreTotal, classificationRanges);
         DataAvaliacao = DateTime.UtcNow;
     }
 

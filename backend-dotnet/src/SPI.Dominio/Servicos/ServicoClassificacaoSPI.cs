@@ -1,4 +1,6 @@
-﻿namespace SPI.Domain.Services;
+﻿using SPI.Domain.Entities;
+
+namespace SPI.Domain.Services;
 
 public static class SPIClassificationService
 {
@@ -25,6 +27,15 @@ public static class SPIClassificationService
         }
 
         return "TEA Grave";
+    }
+
+    public static string ClassifyWithRanges(decimal score, IReadOnlyCollection<FormClassificationRange> ranges)
+    {
+        if (ranges.Count == 0)
+            return Classify(score);
+
+        var match = ranges.FirstOrDefault(r => score >= r.ScoreMin && score <= r.ScoreMax);
+        return match?.Rotulo ?? Classify(score);
     }
 }
 

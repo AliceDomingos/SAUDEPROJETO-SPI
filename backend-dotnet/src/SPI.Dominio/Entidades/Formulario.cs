@@ -86,6 +86,12 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         AtualizadoEm = DateTime.UtcNow;
     }
 
+    public void Activate()
+    {
+        Ativo = true;
+        AtualizadoEm = DateTime.UtcNow;
+    }
+
     private void SetRanges(IEnumerable<(decimal ScoreMin, decimal ScoreMax, string Rotulo)> ranges)
     {
         _classificationRanges.Clear();

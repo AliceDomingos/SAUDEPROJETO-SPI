@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } from 'lucide-react';
 
+
 export interface Column<T> {
-  header: string;
+  header: ReactNode;
   render: (row: T) => ReactNode;
   className?: string;
   align?: 'left' | 'right';

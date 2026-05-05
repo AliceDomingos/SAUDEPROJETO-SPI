@@ -95,9 +95,26 @@ export default function EvaluationFormPage({ embedded = false, onCancel }: Evalu
       const created = await createEvaluation({ patientId: pid, respostas: answers, formId: selectedFormId! });
       const score = Number(created.scoreTotal);
       const pesoTotal = Number(created.pesoTotal);
-      const classification = getClassification(score);
+      const form = formularios.find((f) => f.id === selectedFormId);
+      const faixas = [...(form?.faixas ?? [])].sort((a, b) => a.scoreMin - b.scoreMin);
+      let classification: string;
+      let color: string;
+      let cls: string;
+      if (faixas.length > 0) {
+        const idx = faixas.findIndex((f) => score >= f.scoreMin && score <= f.scoreMax);
+        const pos = idx === -1 ? faixas.length - 1 : idx;
+        classification = faixas[pos]?.rotulo ?? created.classificacao;
+        if (pos === 0) { color = '#16a34a'; cls = 'not-tea'; }
+        else if (pos === faixas.length - 1) { color = '#dc2626'; cls = 'tea-grave'; }
+        else { color = '#ca8a04'; cls = 'tea-leve'; }
+      } else {
+        const result = getClassification(score);
+        classification = result.classification;
+        color = result.color;
+        cls = result.cls;
+      }
       const questions = activeQuestions.map((q) => ({ id: q.id, name: q.name }));
-      setResultData({ score, pesoTotal, ...classification, answers, questions });
+      setResultData({ score, pesoTotal, classification, color, cls, answers, questions });
     } catch {
       setError('Erro ao salvar avaliacao');
     } finally {

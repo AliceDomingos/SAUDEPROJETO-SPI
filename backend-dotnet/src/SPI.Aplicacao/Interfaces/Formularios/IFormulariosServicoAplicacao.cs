@@ -8,6 +8,8 @@ public interface IFormsAppService
     Task<FormResponseDto?> GetByIdAsync(int formId, int actorUserId, CancellationToken cancellationToken = default);
     Task<FormResponseDto> CreateAsync(CreateFormRequestDto request, int actorUserId, CancellationToken cancellationToken = default);
     Task<FormResponseDto> UpdateAsync(int formId, UpdateFormRequestDto request, int actorUserId, CancellationToken cancellationToken = default);
+    Task DeactivateAsync(int formId, int actorUserId, CancellationToken cancellationToken = default);
+    Task ActivateAsync(int formId, int actorUserId, CancellationToken cancellationToken = default);
 }
 
 

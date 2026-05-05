@@ -153,6 +153,46 @@ public sealed class FormsAppService : IFormsAppService
         return updated.ToDto();
     }
 
+    public async Task DeactivateAsync(int formId, int actorUserId, CancellationToken cancellationToken = default)
+    {
+        var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
+
+        if (!actor.Role.CanManageForms())
+        {
+            throw new UnauthorizedAccessException("Usuario sem permissao para desativar formularios.");
+        }
+
+        var form = await _formRepository.GetByIdAsync(formId, cancellationToken)
+            ?? throw new KeyNotFoundException("Formulario nao encontrado.");
+
+        var accessScope = AccessScopeResolver.Resolve(actor);
+        ValidateFormGroupAccess(actor.Role, form.GroupId, accessScope);
+
+        form.Deactivate();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ActivateAsync(int formId, int actorUserId, CancellationToken cancellationToken = default)
+    {
+        var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
+
+        if (!actor.Role.CanManageForms())
+        {
+            throw new UnauthorizedAccessException("Usuario sem permissao para reativar formularios.");
+        }
+
+        var form = await _formRepository.GetByIdAsync(formId, cancellationToken)
+            ?? throw new KeyNotFoundException("Formulario nao encontrado.");
+
+        var accessScope = AccessScopeResolver.Resolve(actor);
+        ValidateFormGroupAccess(actor.Role, form.GroupId, accessScope);
+
+        form.Activate();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     private static void ValidateFormGroupAccess(UserRole role, int? groupId, AccessScope accessScope)
     {
         if (accessScope.IsAdmin)

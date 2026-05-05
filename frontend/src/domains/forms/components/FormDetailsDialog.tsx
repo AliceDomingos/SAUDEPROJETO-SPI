@@ -57,15 +57,47 @@ export default function FormDetailsDialog({ form, open, onClose }: FormDetailsDi
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Perguntas ({form.perguntas.length})
               </p>
-              <ol className="space-y-2">
+              <ol className="space-y-3">
                 {form.perguntas.map((q, i) => (
-                  <li key={q.id ?? i} className="flex items-start gap-3 text-sm text-gray-800">
-                    <span className="shrink-0 font-semibold text-gray-400">{i + 1}.</span>
-                    <span className="flex-1">{q.texto}</span>
-                    <span className="shrink-0 text-xs text-gray-400">peso {q.peso}</span>
+                  <li key={q.id ?? i} className="space-y-1">
+                    <div className="flex items-start gap-3 text-sm text-gray-800">
+                      <span className="shrink-0 font-semibold text-gray-400">{i + 1}.</span>
+                      <span className="flex-1">{q.texto}</span>
+                      <span className="shrink-0 text-xs text-gray-400">peso {q.peso}</span>
+                    </div>
+                    {q.opcoes.length > 0 && (
+                      <ul className="ml-6 space-y-0.5">
+                        {q.opcoes.map((o) => (
+                          <li key={o.valor} className="flex items-center gap-2 text-xs text-gray-500">
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gray-200 font-semibold text-gray-600">
+                              {o.valor}
+                            </span>
+                            <span>{o.descricao}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {form.faixas.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Faixas de Classificação
+              </p>
+              <div className="space-y-1.5">
+                {form.faixas.map((f, i) => (
+                  <div key={i} className="flex items-center gap-3 text-sm">
+                    <span className="shrink-0 text-xs text-gray-400">
+                      {f.scoreMin} — {f.scoreMax}
+                    </span>
+                    <span className="text-gray-700">{f.rotulo}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

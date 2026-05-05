@@ -5,6 +5,12 @@ import { Plus, Trash2, Save } from 'lucide-react';
 import Dialog from '@/shared/components/dialog/Dialog';
 import { useAuthStore } from '@/shared/store/authStore';
 
+const FAIXAS_PADRAO_CARS: FaixaClassificacao[] = [
+  { scoreMin: 0, scoreMax: 29.5, rotulo: 'Sem indicativo de TEA' },
+  { scoreMin: 30, scoreMax: 36.5, rotulo: 'TEA Leve a Moderado' },
+  { scoreMin: 37, scoreMax: 60, rotulo: 'TEA Grave' },
+];
+
 function emptyQuestion(): FormQuestion {
   return { texto: '', peso: 1, ordem: 1, ativa: true, opcoes: [] };
 }
@@ -24,6 +30,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
   const [groupId, setGroupId] = useState<number | ''>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
   const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
+  const [usarClassificacaoPadrao, setUsarClassificacaoPadrao] = useState(false);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,6 +43,7 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
       setGroupId('');
       setPerguntas([emptyQuestion()]);
       setFaixas([]);
+      setUsarClassificacaoPadrao(false);
       setError('');
       return;
     }
@@ -126,6 +134,11 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
       updated[qIndex] = { ...updated[qIndex], opcoes };
       return updated;
     });
+  }
+
+  function toggleClassificacaoPadrao(checked: boolean) {
+    setUsarClassificacaoPadrao(checked);
+    setFaixas(checked ? FAIXAS_PADRAO_CARS : []);
   }
 
   function addFaixa() {
@@ -377,15 +390,27 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
                   Define o resultado com base na soma dos pesos. Ex: 30 a 33 → "Autismo Leve".
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={addFaixa}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
-              >
-                <Plus className="w-3 h-3" />
-                Adicionar faixa
-              </button>
+              {!usarClassificacaoPadrao && (
+                <button
+                  type="button"
+                  onClick={addFaixa}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  <Plus className="w-3 h-3" />
+                  Adicionar faixa
+                </button>
+              )}
             </div>
+
+            <label className="flex items-center gap-2 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={usarClassificacaoPadrao}
+                onChange={(e) => toggleClassificacaoPadrao(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Usar classificação padrão (CARS-BR)</span>
+            </label>
 
             {faixas.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-1">
@@ -406,29 +431,36 @@ export default function FormEditDialog({ formId, onClose, onSaved }: Props) {
                       value={f.scoreMin}
                       onChange={(e) => updateFaixa(i, 'scoreMin', Number(e.target.value))}
                       step={0.5}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                      disabled={usarClassificacaoPadrao}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     />
                     <input
                       type="number"
                       value={f.scoreMax}
                       onChange={(e) => updateFaixa(i, 'scoreMax', Number(e.target.value))}
                       step={0.5}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center"
+                      disabled={usarClassificacaoPadrao}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-center disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     />
                     <input
                       value={f.rotulo}
                       onChange={(e) => updateFaixa(i, 'rotulo', e.target.value)}
                       placeholder="Ex: Autismo Leve"
                       maxLength={200}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      disabled={usarClassificacaoPadrao}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeFaixa(i)}
-                      className="p-1 text-red-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {usarClassificacaoPadrao ? (
+                      <span />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removeFaixa(i)}
+                        className="p-1 text-red-400 hover:text-red-600"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
