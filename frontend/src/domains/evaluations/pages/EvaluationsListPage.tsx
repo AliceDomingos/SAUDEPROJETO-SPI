@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getEvals } from '@/domains/dashboard/api';
+import { getFormById } from '@/domains/forms/api';
 import type { Evaluation } from '@/types';
-import { Eye, Plus } from 'lucide-react';
+import type { Formulario } from '@/domains/forms/types';
+import { Eye, Loader2, Plus, Printer } from 'lucide-react';
 import EvaluationCreateDialog from '../components/EvaluationCreateDialog';
 import EvaluationDetailDialog from '../components/EvaluationDetailDialog';
+import EvaluationPdfPreviewModal from '../components/EvaluationPdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { useAuthStore } from '@/shared/store/authStore';
 
@@ -16,6 +19,19 @@ export default function EvaluationsListPage() {
   const [filter, setFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedEvalId, setSelectedEvalId] = useState<number | null>(null);
+  const [exportingId, setExportingId] = useState<number | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ evaluation: Evaluation; form?: Formulario } | null>(null);
+
+  async function handleOpenPdfPreview(e: Evaluation) {
+    if (exportingId !== null) return;
+    setExportingId(e.id);
+    try {
+      const form = e.formId ? await getFormById(e.formId).catch(() => undefined) : undefined;
+      setPdfPreview({ evaluation: e, form });
+    } finally {
+      setExportingId(null);
+    }
+  }
 
   useEffect(() => {
     getEvals().then((data: Evaluation[]) => setEvals(data));
@@ -44,14 +60,28 @@ export default function EvaluationsListPage() {
       header: 'Ações',
       sticky: true,
       render: (e) => (
-        <button
-          type="button"
-          onClick={() => setSelectedEvalId(e.id)}
-          className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
-        >
-          <Eye className="h-3.5 w-3.5" />
-          Visualizar
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setSelectedEvalId(e.id)}
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Visualizar
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenPdfPreview(e)}
+            disabled={exportingId === e.id}
+            title="Exportar PDF"
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+          >
+            {exportingId === e.id
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              : <Printer className="h-3.5 w-3.5" />}
+            PDF
+          </button>
+        </div>
       ),
     },
     {
@@ -114,6 +144,11 @@ export default function EvaluationsListPage() {
 
       {canCreateEvaluations() && <EvaluationCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />}
       <EvaluationDetailDialog evalId={selectedEvalId} onClose={() => setSelectedEvalId(null)} />
+      <EvaluationPdfPreviewModal
+        evaluation={pdfPreview?.evaluation ?? null}
+        form={pdfPreview?.form}
+        onClose={() => setPdfPreview(null)}
+      />
     </div>
   );
 }
