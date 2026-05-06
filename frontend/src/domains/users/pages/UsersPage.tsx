@@ -21,6 +21,7 @@ import type { Group } from '@/domains/groups/types';
 import { getGroups } from '@/domains/groups/api';
 import { useAuthStore } from '@/shared/store/authStore';
 import { isAdminDefaultGroup } from '@/domains/groups/utils/systemGroupRules';
+import SearchFiltersPanel from '@/shared/components/filters/SearchFiltersPanel';
 
 export default function UsersPage() {
   const isAdmin = useAuthStore((s) => s.isAdmin());
@@ -29,6 +30,7 @@ export default function UsersPage() {
   const excludeRolesForCreate: import('@/types').UserRole[] = isGestor ? ['admin', 'analista'] : [];
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -182,13 +184,24 @@ export default function UsersPage() {
         </div>
       )}
 
+      <SearchFiltersPanel
+        title="Encontre usuários com mais rapidez"
+        description="Busque pelo nome ou e-mail do usuário."
+        searchLabel="Buscar usuário"
+        searchValue={filter}
+        searchPlaceholder="Buscar por nome ou e-mail..."
+        onSearchChange={setFilter}
+        hasActiveFilters={filter.trim().length > 0}
+        onClear={() => setFilter('')}
+      />
+
       {loading ? (
         <div className="rounded-xl border border-gray-200 bg-white px-6 py-10 text-center text-sm text-gray-500">
           Carregando usuarios...
         </div>
       ) : (
         <DataTable
-          data={users}
+          data={users.filter((u) => u.nome.toLowerCase().includes(filter.toLowerCase()) || u.email.toLowerCase().includes(filter.toLowerCase()))}
           columns={columns}
           keyExtractor={(u) => u.id}
           emptyMessage="Nenhum usuario cadastrado ate o momento."

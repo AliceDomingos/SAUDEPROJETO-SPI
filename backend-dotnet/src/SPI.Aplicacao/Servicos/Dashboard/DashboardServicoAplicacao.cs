@@ -65,7 +65,7 @@ public sealed class DashboardAppService : IDashboardAppService
                 TotalAvaliacoes = filteredEvaluations.Count,
                 TotalFormularios = forms.Count,
                 TotalGrupos = groups.Count,
-                Triagens = BuildTriageSummary(filteredEvaluations, CountPatientsForSummary(filteredEvaluations, patients.Count)),
+                Triagens = BuildTriageSummary(filteredEvaluations, CountPatientsForSummary(filteredEvaluations, patients.Count), evaluations),
                 UltimasAvaliacoes = []
             };
         }
@@ -106,7 +106,7 @@ public sealed class DashboardAppService : IDashboardAppService
             TotalAvaliacoes = filteredScopedEvaluations.Count,
             TotalFormularios = scopedForms.Count,
             TotalGrupos = scopedGroups.Count,
-            Triagens = BuildTriageSummary(filteredScopedEvaluations, CountPatientsForSummary(filteredScopedEvaluations, scopedPatients.Count)),
+            Triagens = BuildTriageSummary(filteredScopedEvaluations, CountPatientsForSummary(filteredScopedEvaluations, scopedPatients.Count), scopedEvaluations),
             UltimasAvaliacoes = filteredScopedEvaluations.Take(5).Select(x => x.ToDto()).ToArray()
         };
     }
@@ -173,7 +173,7 @@ public sealed class DashboardAppService : IDashboardAppService
     private static int CountPatientsForSummary(IReadOnlyCollection<EvaluationDetails> evaluations, int fallbackTotal) =>
         evaluations.Count == 0 ? fallbackTotal : evaluations.Select(x => x.PatientId).Distinct().Count();
 
-    private static DashboardTriageSummaryDto BuildTriageSummary(IReadOnlyCollection<EvaluationDetails> evaluations, int totalPatients)
+    private static DashboardTriageSummaryDto BuildTriageSummary(IReadOnlyCollection<EvaluationDetails> evaluations, int totalPatients, IEnumerable<EvaluationDetails>? allEvaluations = null)
     {
         var scores = evaluations.Select(x => x.ScoreTotal).ToArray();
         var encaminhados = evaluations.Count(x => x.Referral?.Encaminhado == true);
@@ -181,6 +181,11 @@ public sealed class DashboardAppService : IDashboardAppService
         var custoTotalEncaminhamentos = evaluations
             .Where(x => x.Referral?.Encaminhado == true)
             .Sum(x => x.Referral?.CustoEstimado ?? 0m);
+
+        var allEvs = (allEvaluations ?? evaluations).ToArray();
+        var hoje = DateTime.UtcNow;
+        var mesAnterior = BuildMesAnterior(allEvs, hoje.AddMonths(-1));
+        var mesAtual = BuildMesAtual(allEvs, hoje);
 
         return new DashboardTriageSummaryDto
         {
@@ -195,6 +200,8 @@ public sealed class DashboardAppService : IDashboardAppService
             CustoTotalEncaminhamentos = custoTotalEncaminhamentos,
             CasosSeveros = evaluations.Count(x => RiskLabel(x) == "Severo"),
             TaxaEncaminhamento = evaluations.Count == 0 ? 0 : Math.Round(encaminhados * 100m / evaluations.Count, 1),
+            MesAnterior = mesAnterior,
+            MesAtual = mesAtual,
             DistribuicaoTriagensMensais = MonthlyDistribution(evaluations),
             DistribuicaoRisco = Distribution(evaluations, RiskLabel, ["Severo", "Moderado", "Leve", "Sem Sinais"]),
             DistribuicaoEspecialista = Distribution(
@@ -202,6 +209,35 @@ public sealed class DashboardAppService : IDashboardAppService
                     x => x.Referral?.Especialidade ?? string.Empty)
                 .Take(6)
                 .ToArray()
+        };
+    }
+
+    private static EvaluationDetails[] FiltrarCompetencia(IEnumerable<EvaluationDetails> evs, DateTime referencia)
+    {
+        var inicio = new DateTime(referencia.Year, referencia.Month, 1);
+        var fim = inicio.AddMonths(1).AddDays(-1);
+        return evs.Where(x => x.DataAvaliacao.Date >= inicio.Date && x.DataAvaliacao.Date <= fim.Date).ToArray();
+    }
+
+    private static DashboardMesAnteriorDto BuildMesAnterior(IEnumerable<EvaluationDetails> allEvaluations, DateTime referencia)
+    {
+        var evs = FiltrarCompetencia(allEvaluations, referencia);
+        return new DashboardMesAnteriorDto
+        {
+            Encaminhados = evs.Count(x => x.Referral?.Encaminhado == true),
+            ConsultasEvitadas = evs.Count(x => x.Referral is not null && !x.Referral.Encaminhado),
+            CustoTotalEncaminhamentos = evs.Where(x => x.Referral?.Encaminhado == true).Sum(x => x.Referral?.CustoEstimado ?? 0m)
+        };
+    }
+
+    private static DashboardMesAtualDto BuildMesAtual(IEnumerable<EvaluationDetails> allEvaluations, DateTime referencia)
+    {
+        var evs = FiltrarCompetencia(allEvaluations, referencia);
+        return new DashboardMesAtualDto
+        {
+            Encaminhados = evs.Count(x => x.Referral?.Encaminhado == true),
+            ConsultasEvitadas = evs.Count(x => x.Referral is not null && !x.Referral.Encaminhado),
+            CustoTotalEncaminhamentos = evs.Where(x => x.Referral?.Encaminhado == true).Sum(x => x.Referral?.CustoEstimado ?? 0m)
         };
     }
 

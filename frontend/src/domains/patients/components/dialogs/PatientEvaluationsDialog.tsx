@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import Dialog from '@/shared/components/dialog/Dialog';
 import type { Evaluation, Patient } from '@/types';
 import { getPatientEvaluations } from '../../api';
@@ -26,6 +28,7 @@ export default function PatientEvaluationsDialog({
   open,
   onClose,
 }: PatientEvaluationsDialogProps) {
+  const navigate = useNavigate();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -114,11 +117,21 @@ export default function PatientEvaluationsDialog({
                     {new Date(evaluation.dataAvaliacao).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ${getScoreBadgeClass(evaluation.scoreTotal)}`}
-                >
-                  {evaluation.scoreTotal}/60
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ${getScoreBadgeClass(evaluation.scoreTotal)}`}
+                  >
+                    {evaluation.scoreTotal}/60
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { onClose(); navigate(`/avaliacoes/${evaluation.id}`); }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    Visualizar
+                  </button>
+                </div>
               </div>
             </div>
           ))}

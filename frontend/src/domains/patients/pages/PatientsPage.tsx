@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ClipboardList, Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Patient } from '@/types';
 import type { Group } from '@/domains/groups/types';
 import { getGroups } from '@/domains/groups/api';
@@ -17,6 +17,7 @@ import PatientCreateDialog from '../components/dialogs/PatientCreateDialog';
 import PatientEditDialog from '../components/dialogs/PatientEditDialog';
 import PatientDetailsDialog from '../components/dialogs/PatientDetailsDialog';
 import PatientDeleteDialog from '../components/dialogs/PatientDeleteDialog';
+import PatientEvaluationsDialog from '../components/dialogs/PatientEvaluationsDialog';
 import type { PatientSearchField } from '../types';
 import { formatCpf, formatDate, formatPatientSex, formatPhone, getPatientAgeLabel, matchesPatientSearch } from '../components/utils/patientUtils';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
@@ -36,6 +37,7 @@ export default function PatientsPage() {
   const [detailsPatient, setDetailsPatient] = useState<Patient | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatientTarget, setDeletePatientTarget] = useState<Patient | null>(null);
+  const [evaluationsPatient, setEvaluationsPatient] = useState<Patient | null>(null);
 
   const refreshPatients = async () => {
     const data = await getPatients();
@@ -112,6 +114,14 @@ export default function PatientsPage() {
             className="rounded-lg border border-gray-300 p-2 text-gray-700 transition hover:bg-gray-50"
           >
             <Eye className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setEvaluationsPatient(p)}
+            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+          >
+            <ClipboardList className="h-3.5 w-3.5" />
+            Avaliações
           </button>
           {canManagePatients() && (
             <>
@@ -256,6 +266,11 @@ export default function PatientsPage() {
         open={deletePatientTarget !== null}
         onClose={() => setDeletePatientTarget(null)}
         onConfirm={handleDelete}
+      />
+      <PatientEvaluationsDialog
+        patient={evaluationsPatient}
+        open={evaluationsPatient !== null}
+        onClose={() => setEvaluationsPatient(null)}
       />
     </div>
   );

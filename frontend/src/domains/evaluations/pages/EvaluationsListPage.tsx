@@ -10,6 +10,7 @@ import EvaluationDetailDialog from '../components/EvaluationDetailDialog';
 import EvaluationPdfPreviewModal from '../components/EvaluationPdfPreviewModal';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { useAuthStore } from '@/shared/store/authStore';
+import SearchFiltersPanel from '@/shared/components/filters/SearchFiltersPanel';
 
 export default function EvaluationsListPage() {
   const navigate = useNavigate();
@@ -108,6 +109,17 @@ export default function EvaluationsListPage() {
         </span>
       ),
     },
+    {
+      header: 'Encaminhamento',
+      render: (e) => {
+        if (!e.referral) return <span className="text-xs text-gray-400">Pendente</span>;
+        return e.referral.encaminhado ? (
+          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">Encaminhado</span>
+        ) : (
+          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-600">Não encaminhado</span>
+        );
+      },
+    },
   ];
 
   return (
@@ -128,11 +140,15 @@ export default function EvaluationsListPage() {
         )}
       </div>
 
-      <input
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        placeholder="Buscar por paciente..."
-        className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+      <SearchFiltersPanel
+        title="Encontre avaliações com mais rapidez"
+        description="Busque pelo nome do paciente ou avaliador."
+        searchLabel="Buscar avaliação"
+        searchValue={filter}
+        searchPlaceholder="Buscar por paciente..."
+        onSearchChange={setFilter}
+        hasActiveFilters={filter.trim().length > 0}
+        onClear={() => setFilter('')}
       />
 
       <DataTable

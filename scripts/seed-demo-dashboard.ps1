@@ -12,7 +12,12 @@ $backendFullPath = Resolve-Path (Join-Path $root $BackendPath)
 $projectPath = Join-Path $backendFullPath "tools\SPI.DemoDataSeeder\SPI.DemoDataSeeder.csproj"
 $apiPath = Join-Path $backendFullPath "src\SPI.API"
 
-dotnet run --project $projectPath -- `
-    --csv "$csvFullPath" `
-    --api "$apiPath" `
-    --environment "$Environment"
+Push-Location $apiPath
+try {
+    dotnet run --project $projectPath -- `
+        --csv "$csvFullPath" `
+        --api "$apiPath" `
+        --environment "$Environment"
+} finally {
+    Pop-Location
+}

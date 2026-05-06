@@ -26,9 +26,25 @@ public sealed class DashboardTriageSummaryDto
     public decimal CustoTotalEncaminhamentos { get; init; }
     public int CasosSeveros { get; init; }
     public decimal TaxaEncaminhamento { get; init; }
+    public DashboardMesAnteriorDto MesAnterior { get; init; } = new();
+    public DashboardMesAtualDto MesAtual { get; init; } = new();
     public IReadOnlyCollection<DashboardDistributionItemDto> DistribuicaoTriagensMensais { get; init; } = [];
     public IReadOnlyCollection<DashboardDistributionItemDto> DistribuicaoRisco { get; init; } = [];
     public IReadOnlyCollection<DashboardDistributionItemDto> DistribuicaoEspecialista { get; init; } = [];
+}
+
+public sealed class DashboardMesAnteriorDto
+{
+    public int Encaminhados { get; init; }
+    public int ConsultasEvitadas { get; init; }
+    public decimal CustoTotalEncaminhamentos { get; init; }
+}
+
+public sealed class DashboardMesAtualDto
+{
+    public int Encaminhados { get; init; }
+    public int ConsultasEvitadas { get; init; }
+    public decimal CustoTotalEncaminhamentos { get; init; }
 }
 
 public sealed class DashboardDistributionItemDto

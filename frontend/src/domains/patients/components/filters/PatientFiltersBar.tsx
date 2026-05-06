@@ -35,11 +35,7 @@ export default function PatientFiltersBar({
       searchValue={search}
       searchPlaceholder={searchPlaceholderByField[searchField]}
       onSearchChange={onSearchChange}
-      filterLabel="Refinar por campo"
-      filterValue={searchField}
-      filterOptions={patientSearchFieldOptions}
-      onFilterChange={(value) => onSearchFieldChange(value as PatientSearchField)}
-      hasActiveFilters={hasActiveFilters}
+      hasActiveFilters={search.trim().length > 0}
       onClear={onClear}
     />
   );

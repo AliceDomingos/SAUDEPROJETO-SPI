@@ -54,11 +54,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   canViewEvaluations: () => {
     const role = get().user?.role;
-    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+    return role === 'gestor' || role === 'agente_saude';
   },
   canCreateEvaluations: () => {
     const role = get().user?.role;
-    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+    return role === 'gestor' || role === 'agente_saude';
   },
   canViewForms: () => {
     const role = get().user?.role;

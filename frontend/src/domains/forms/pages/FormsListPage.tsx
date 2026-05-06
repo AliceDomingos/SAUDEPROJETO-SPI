@@ -11,6 +11,7 @@ import { exportFormToExcel, parseImportedJson, type FormImportData } from '../ut
 import { parseDocxForm } from '../utils/formDocxImport';
 import { parseExcelForm } from '../utils/formExcelImport';
 import { useAuthStore } from '@/shared/store/authStore';
+import SearchFiltersPanel from '@/shared/components/filters/SearchFiltersPanel';
 
 export default function FormsListPage() {
   const canManageForms = useAuthStore((state) => state.canManageForms);
