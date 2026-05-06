@@ -14,6 +14,8 @@ interface AuthState {
   canCreateEvaluations: () => boolean;
   canViewForms: () => boolean;
   canManageForms: () => boolean;
+  canViewSpecialists: () => boolean;
+  canManageSpecialists: () => boolean;
   canManageGroups: () => boolean;
   canManageUsers: () => boolean;
 }
@@ -65,6 +67,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   canManageForms: () => {
     const role = get().user?.role;
     return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canViewSpecialists: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor' || role === 'agente_saude';
+  },
+  canManageSpecialists: () => {
+    const role = get().user?.role;
+    return role === 'admin' || role === 'gestor';
   },
   canManageGroups: () => {
     const role = get().user?.role;

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using SPI.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -34,8 +34,8 @@ public sealed class EvaluationConfiguration : IEntityTypeConfiguration<Evaluatio
             .HasColumnName("respostas")
             .HasConversion(
                 value => JsonSerializer.Serialize(value, JsonSerializerOptions.Default),
-                value => JsonSerializer.Deserialize<Dictionary<int, int>>(value, JsonSerializerOptions.Default) ?? new Dictionary<int, int>(),
-                new ValueComparer<Dictionary<int, int>>(
+                value => JsonSerializer.Deserialize<Dictionary<string, int>>(value, JsonSerializerOptions.Default) ?? new Dictionary<string, int>(),
+                new ValueComparer<Dictionary<string, int>>(
                     (left, right) => JsonSerializer.Serialize(left, JsonSerializerOptions.Default) == JsonSerializer.Serialize(right, JsonSerializerOptions.Default),
                     value => JsonSerializer.Serialize(value, JsonSerializerOptions.Default).GetHashCode(),
                     value => value.ToDictionary(entry => entry.Key, entry => entry.Value)))
@@ -55,6 +55,10 @@ public sealed class EvaluationConfiguration : IEntityTypeConfiguration<Evaluatio
             .HasColumnName("classificacao")
             .HasMaxLength(50)
             .IsRequired();
+
+        builder.Property(x => x.Observacoes)
+            .HasColumnName("observacoes")
+            .HasMaxLength(2000);
 
         builder.Property(x => x.DataAvaliacao)
             .HasColumnName("data_avaliacao")
@@ -94,6 +98,5 @@ public sealed class EvaluationConfiguration : IEntityTypeConfiguration<Evaluatio
         builder.HasIndex(x => x.FormTemplateId);
     }
 }
-
 
 

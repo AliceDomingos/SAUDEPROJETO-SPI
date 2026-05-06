@@ -27,7 +27,7 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
   const isAdmin = useAuthStore((s) => s.isAdmin());
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
-  const [groupId, setGroupId] = useState<number | ''>('');
+  const [groupId, setGroupId] = useState<string>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
   const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
   const [usarClassificacaoPadrao, setUsarClassificacaoPadrao] = useState(false);
@@ -174,7 +174,7 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
       await createForm({
         nome,
         descricao: descricao || undefined,
-        groupId: groupId ? Number(groupId) : undefined,
+        groupId: groupId || undefined,
         perguntas: validPerguntas.map((q, i) => ({
           texto: q.texto.trim(),
           peso: derivedPeso(q),
@@ -264,7 +264,7 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
             ) : (
               <select
                 value={groupId}
-                onChange={(e) => setGroupId(e.target.value ? Number(e.target.value) : '')}
+                onChange={(e) => setGroupId(e.target.value)}
                 required={!isAdmin}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
               >

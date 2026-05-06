@@ -8,14 +8,14 @@ public sealed class Organization : Entity, IAggregateRoot
     {
     }
 
-    public Organization(string nome, int adminId)
+    public Organization(string nome, Guid adminId)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
             throw new InvalidOperationException("Nome da organizacao e obrigatorio.");
         }
 
-        if (adminId <= 0)
+        if (adminId == Guid.Empty)
         {
             throw new InvalidOperationException("Admin invalido.");
         }
@@ -26,7 +26,7 @@ public sealed class Organization : Entity, IAggregateRoot
     }
 
     public string Nome { get; private set; } = string.Empty;
-    public int AdminId { get; private set; }
+    public Guid AdminId { get; private set; }
     public DateTime CriadoEm { get; private set; }
 
     public User Admin { get; private set; } = null!;

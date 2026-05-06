@@ -5,7 +5,7 @@ export async function getForms(): Promise<Formulario[]> {
   return api.get('/api/forms').then((r) => r.data);
 }
 
-export async function getFormById(id: number): Promise<Formulario> {
+export async function getFormById(id: string): Promise<Formulario> {
   return api.get(`/api/forms/${id}`).then((r) => r.data);
 }
 
@@ -13,7 +13,7 @@ export async function createForm(data: CriarFormularioPayload): Promise<Formular
   return api.post('/api/forms', data).then((r) => r.data);
 }
 
-export async function updateForm(id: number, data: CriarFormularioPayload): Promise<Formulario> {
+export async function updateForm(id: string, data: CriarFormularioPayload): Promise<Formulario> {
   return api.put(`/api/forms/${id}`, data).then((r) => r.data);
 }
 

@@ -37,7 +37,7 @@ public static class SystemGroupRules
         }
     }
 
-    public static void EnsureManagerRemainsAdminForProtectedGroup(Group group, int gestorId, int adminUserId)
+    public static void EnsureManagerRemainsAdminForProtectedGroup(Group group, Guid gestorId, Guid adminUserId)
     {
         if (IsAdminDefaultGroup(group) && gestorId != adminUserId)
         {

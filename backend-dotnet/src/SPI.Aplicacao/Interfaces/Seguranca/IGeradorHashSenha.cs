@@ -1,4 +1,4 @@
-﻿namespace SPI.Application.Interfaces.Seguranca;
+namespace SPI.Application.Interfaces.Seguranca;
 
 public interface IPasswordHasher
 {

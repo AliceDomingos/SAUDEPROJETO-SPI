@@ -58,5 +58,5 @@ public sealed class CreatePatientRequestDto
     [MaxLength(2000)]
     public string? Observacoes { get; init; }
 
-    public int? GroupId { get; init; }
+    public Guid? GroupId { get; init; }
 }

@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Evaluations;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -39,8 +39,15 @@ public sealed class EvaluationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    [HttpPut("{id:guid}/referral")]
+    public async Task<IActionResult> SaveReferral(Guid id, [FromBody] SaveEvaluationReferralRequestDto request, CancellationToken cancellationToken)
+    {
+        var result = await _evaluationsAppService.SaveReferralAsync(id, request, User.GetUserId(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _evaluationsAppService.GetByIdAsync(id, User.GetUserId(), cancellationToken);
         if (result is null)
@@ -51,23 +58,23 @@ public sealed class EvaluationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = "EvaluationManagement")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _evaluationsAppService.DeleteAsync(id, User.GetUserId(), cancellationToken);
         return Ok(new { message = "Avaliacao deletada" });
     }
 
-    [HttpGet("{id:int}/export/excel")]
-    public async Task<IActionResult> ExportExcel(int id, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}/export/excel")]
+    public async Task<IActionResult> ExportExcel(Guid id, CancellationToken cancellationToken)
     {
         var file = await _evaluationsAppService.ExportExcelAsync(id, User.GetUserId(), cancellationToken);
         return File(file.Content, file.ContentType, file.FileName);
     }
 
-    [HttpGet("{id:int}/export/pdf")]
-    public async Task<IActionResult> ExportPdf(int id, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}/export/pdf")]
+    public async Task<IActionResult> ExportPdf(Guid id, CancellationToken cancellationToken)
     {
         var file = await _evaluationsAppService.ExportPdfAsync(id, User.GetUserId(), cancellationToken);
         return File(file.Content, file.ContentType, file.FileName);

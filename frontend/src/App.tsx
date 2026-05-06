@@ -14,6 +14,7 @@ import EvaluationDetailPage from '@/domains/evaluations/pages/EvaluationDetailPa
 import FormsListPage from '@/domains/forms/pages/FormsListPage';
 import FormEditorPage from '@/domains/forms/pages/FormEditorPage';
 import GroupsPage from '@/domains/groups/pages/GroupsPage';
+import SpecialistsPage from '@/domains/specialists/pages/SpecialistsPage';
 
 function Private() {
   const canViewDashboard = useAuthStore((s) => s.canViewDashboard);
@@ -22,6 +23,7 @@ function Private() {
   const canViewEvaluations = useAuthStore((s) => s.canViewEvaluations);
   const canCreateEvaluations = useAuthStore((s) => s.canCreateEvaluations);
   const canViewForms = useAuthStore((s) => s.canViewForms);
+  const canViewSpecialists = useAuthStore((s) => s.canViewSpecialists);
   const canManageGroups = useAuthStore((s) => s.canManageGroups);
   const canManageUsers = useAuthStore((s) => s.canManageUsers);
   const defaultPath = canViewDashboard()
@@ -42,6 +44,7 @@ function Private() {
         <Route path="formularios" element={canViewForms() ? <FormsListPage /> : <Navigate to={defaultPath} replace />} />
         <Route path="formularios/novo" element={canManageForms() ? <FormEditorPage /> : <Navigate to={defaultPath} replace />} />
         <Route path="formularios/:id" element={canManageForms() ? <FormEditorPage /> : <Navigate to={defaultPath} replace />} />
+        <Route path="especialistas" element={canViewSpecialists() ? <SpecialistsPage /> : <Navigate to={defaultPath} replace />} />
         <Route path="grupos" element={canManageGroups() ? <GroupsPage /> : <Navigate to={defaultPath} replace />} />
         <Route path="usuarios" element={canManageUsers() ? <UsersPage /> : <Navigate to={defaultPath} replace />} />
         <Route path="*" element={<Navigate to={defaultPath} replace />} />

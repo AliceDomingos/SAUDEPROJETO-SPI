@@ -8,13 +8,13 @@ export interface UserFormValues {
   email: string;
   confirmEmail: string;
   role: UserRole;
-  groupIds: number[];
+  groupIds: string[];
 }
 
 interface UserFormFieldsProps {
   values: UserFormValues;
   onChange: (field: Exclude<keyof UserFormValues, 'groupIds'>, value: string) => void;
-  onGroupIdsChange?: (groupIds: number[]) => void;
+  onGroupIdsChange?: (groupIds: string[]) => void;
   groups?: Group[];
   singleGroupSelect?: boolean;
   excludeRoles?: UserRole[];
@@ -41,7 +41,7 @@ export default function UserFormFields({
     }
   }, [groups, singleGroupSelect]);
 
-  const toggleGroup = (groupId: number) => {
+  const toggleGroup = (groupId: string) => {
     if (!onGroupIdsChange) {
       return;
     }
@@ -54,7 +54,7 @@ export default function UserFormFields({
 
   const handleSingleGroupChange = (groupId: string) => {
     if (!onGroupIdsChange) return;
-    onGroupIdsChange(groupId ? [Number(groupId)] : []);
+    onGroupIdsChange(groupId ? [groupId] : []);
   };
 
   return (

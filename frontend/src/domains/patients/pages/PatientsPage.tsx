@@ -68,12 +68,12 @@ export default function PatientsPage() {
     await refreshPatients();
   };
 
-  const handleEdit = async (patientId: number, data: UpdatePatientInput) => {
+  const handleEdit = async (patientId: string, data: UpdatePatientInput) => {
     await updatePatient(patientId, data);
     await refreshPatients();
   };
 
-  const handleDelete = async (patientId: number) => {
+  const handleDelete = async (patientId: string) => {
     await deletePatient(patientId);
     await refreshPatients();
   };

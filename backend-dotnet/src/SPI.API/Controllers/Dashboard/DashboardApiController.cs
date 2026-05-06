@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Api.Services;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -23,9 +23,22 @@ public sealed class DashboardController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    public async Task<IActionResult> Get(
+        [FromQuery] string? risco,
+        [FromQuery] string? especialista,
+        [FromQuery] DateTime? dataInicio,
+        [FromQuery] DateTime? dataFim,
+        [FromQuery] Guid? grupoId,
+        CancellationToken cancellationToken)
     {
-        var result = await _dashboardAppService.GetAsync(User.GetUserId(), cancellationToken);
+        var result = await _dashboardAppService.GetAsync(User.GetUserId(), risco, especialista, dataInicio, dataFim, grupoId, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("groups")]
+    public async Task<IActionResult> ListFilterGroups(CancellationToken cancellationToken)
+    {
+        var result = await _dashboardAppService.ListFilterGroupsAsync(User.GetUserId(), cancellationToken);
         return Ok(result);
     }
 

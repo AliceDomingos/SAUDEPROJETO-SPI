@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Forms;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -25,8 +25,8 @@ public sealed class FormsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{formId:int}")]
-    public async Task<IActionResult> GetById(int formId, CancellationToken cancellationToken)
+    [HttpGet("{formId:guid}")]
+    public async Task<IActionResult> GetById(Guid formId, CancellationToken cancellationToken)
     {
         var result = await _formsAppService.GetByIdAsync(formId, User.GetUserId(), cancellationToken);
         if (result is null)
@@ -45,9 +45,9 @@ public sealed class FormsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{formId:int}")]
+    [HttpPut("{formId:guid}")]
     [Authorize(Policy = "FormManagement")]
-    public async Task<IActionResult> Update(int formId, [FromBody] UpdateFormRequestDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid formId, [FromBody] UpdateFormRequestDto request, CancellationToken cancellationToken)
     {
         var result = await _formsAppService.UpdateAsync(formId, request, User.GetUserId(), cancellationToken);
         return Ok(result);

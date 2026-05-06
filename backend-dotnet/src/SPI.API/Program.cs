@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using SPI.Infrastructure.Data.Seed;
 using SPI.Infrastructure.Data.Security;
 using SPI.Infrastructure.IoC;
@@ -65,6 +65,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("EvaluationManagement", policy => policy.RequireRole("admin", "gestor"));
     options.AddPolicy("FormAccess", policy => policy.RequireRole("admin", "analista", "agente_saude", "gestor"));
     options.AddPolicy("FormManagement", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
+    options.AddPolicy("SpecialistAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
+    options.AddPolicy("SpecialistManagement", policy => policy.RequireRole("admin", "gestor"));
     options.AddPolicy("GroupAccess", policy => policy.RequireRole("admin", "agente_saude", "gestor"));
     options.AddPolicy("GroupManagement", policy => policy.RequireRole("admin", "gestor"));
 });

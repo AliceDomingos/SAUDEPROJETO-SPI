@@ -61,6 +61,7 @@ public sealed class SpiMockSusDashboardService
             TempoMedioIntervencaoDias = Round(tratamentosIniciadosRows.Select(x => x.TempoEsperaDias).Where(x => x.HasValue).Select(x => x!.Value).DefaultIfEmpty(0).Average()),
             ConsultasEvitadas = consultasEvitadas,
             EconomiaFinanceiraEstimada = consultasEvitadas * CustoMedioConsultaEspecializada,
+            CustoTotalEncaminhamentos = 0,
             CustoMedioConsultaEspecializada = CustoMedioConsultaEspecializada,
             TaxaEncaminhamento = Percentage(encaminhados, rows.Count),
             TaxaComparecimento = Percentage(consultasRealizadas, encaminhados),
@@ -358,6 +359,7 @@ public sealed class SpiMockSusDashboardResponse
     public double TempoMedioIntervencaoDias { get; init; }
     public int ConsultasEvitadas { get; init; }
     public double EconomiaFinanceiraEstimada { get; init; }
+    public double CustoTotalEncaminhamentos { get; init; }
     public double CustoMedioConsultaEspecializada { get; init; }
     public double TaxaEncaminhamento { get; init; }
     public double TaxaComparecimento { get; init; }

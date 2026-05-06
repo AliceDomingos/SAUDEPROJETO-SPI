@@ -1,4 +1,4 @@
-﻿using SPI.Application.Interfaces.Seguranca;
+using SPI.Application.Interfaces.Seguranca;
 using SPI.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 

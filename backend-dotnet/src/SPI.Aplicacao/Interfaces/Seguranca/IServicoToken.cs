@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 
 namespace SPI.Application.Interfaces.Seguranca;
 

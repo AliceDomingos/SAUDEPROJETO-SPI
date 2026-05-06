@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, Banknote, CalendarDays, CheckCircle2, ClipboardList, Filter, Route, Sparkles, TrendingUp, X } from 'lucide-react';
-import { getDashboardStats, type DashboardFilter, type SpiMockSusDashboard } from '../api';
+import { getDashboardGroups, getDashboardStats, type DashboardFilter, type SpiMockSusDashboard } from '../api';
 import { DistributionDonut, HorizontalBars, MonthlyBars } from '../components/DashboardCharts';
 import PeriodFilter, { type PeriodSelection } from '../components/PeriodFilter';
 import StatsCards from '../components/StatsCards';
+import type { Group } from '@/domains/groups/types';
+import { useAuthStore } from '@/shared/store/authStore';
 
 type DashboardFilterState = {
   risco?: string;
@@ -12,6 +14,8 @@ type DashboardFilterState = {
   dataFim?: string;
   periodoLabel?: string;
   monthLabel?: string;
+  grupoId?: string;
+  grupoNome?: string;
 };
 
 function formatDate(date: string | null | undefined) {
@@ -35,7 +39,7 @@ function toDateInputValue(date: string | null | undefined) {
 }
 
 function hasFilters(filters: DashboardFilterState) {
-  return Boolean(filters.risco || filters.especialista || filters.dataInicio || filters.dataFim);
+  return Boolean(filters.risco || filters.especialista || filters.dataInicio || filters.dataFim || filters.grupoId);
 }
 
 function toApiFilter(filters: DashboardFilterState): DashboardFilter {
@@ -44,6 +48,7 @@ function toApiFilter(filters: DashboardFilterState): DashboardFilter {
     especialista: filters.especialista,
     dataInicio: filters.dataInicio,
     dataFim: filters.dataFim,
+    grupoId: filters.grupoId,
   };
 }
 
@@ -81,7 +86,9 @@ export default function DashboardPage() {
   const [baseStats, setBaseStats] = useState<SpiMockSusDashboard | null>(null);
   const [filteredStats, setFilteredStats] = useState<SpiMockSusDashboard | null>(null);
   const [filters, setFilters] = useState<DashboardFilterState>({});
+  const [groups, setGroups] = useState<Group[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const isAnalyst = useAuthStore((state) => state.user?.role === 'analista');
 
   const filtersActive = hasFilters(filters);
   const stats = filtersActive ? filteredStats ?? baseStats : baseStats;
@@ -96,6 +103,23 @@ export default function DashboardPage() {
         setError('Erro ao carregar indicadores do CSV');
       });
   }, []);
+
+  useEffect(() => {
+    if (!isAnalyst) return;
+
+    let isCurrent = true;
+    getDashboardGroups()
+      .then((data) => {
+        if (isCurrent) setGroups(data);
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar grupos do dashboard:', err);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [isAnalyst]);
 
   useEffect(() => {
     if (!baseStats || !filtersActive) return;
@@ -118,10 +142,11 @@ export default function DashboardPage() {
   const activeChips = useMemo(
     () => [
       filters.periodoLabel ? { key: 'periodo', label: `Período: ${filters.periodoLabel}` } : null,
+      filters.grupoId ? { key: 'grupo', label: `Grupo: ${filters.grupoNome ?? groups.find((group) => group.id === filters.grupoId)?.nome ?? filters.grupoId}` } : null,
       filters.risco ? { key: 'risco', label: `Risco: ${filters.risco}` } : null,
       filters.especialista ? { key: 'especialista', label: `Especialidade: ${filters.especialista}` } : null,
     ].filter((item): item is { key: string; label: string } => Boolean(item)),
-    [filters]
+    [filters, groups]
   );
 
   if (error && !stats) return <div className="text-center py-8 text-red-400">{error}</div>;
@@ -154,7 +179,31 @@ export default function DashboardPage() {
         void especialista;
         return rest;
       }
+      if (key === 'grupo') {
+        const { grupoId, grupoNome, ...rest } = current;
+        void grupoId;
+        void grupoNome;
+        return rest;
+      }
       return current;
+    });
+  };
+
+  const applyGroupFilter = (groupId: string) => {
+    setFilters((current) => {
+      if (!groupId) {
+        const { grupoId: _grupoId, grupoNome, ...rest } = current;
+        void _grupoId;
+        void grupoNome;
+        return rest;
+      }
+
+      const group = groups.find((item) => item.id === groupId);
+      return {
+        ...current,
+        grupoId: groupId,
+        grupoNome: group?.nome,
+      };
     });
   };
 
@@ -202,7 +251,7 @@ export default function DashboardPage() {
               NEXOS · Dashboard Triagem
             </div>
             <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">Indicadores gerenciais SPI</h2>
-            <p className="mt-1 text-sm text-gray-500">Base mockada via API a partir de {stats.fonte}</p>
+            <p className="mt-1 text-sm text-gray-500">Base integrada via API: {stats.fonte}</p>
 
             {activeChips.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -223,8 +272,9 @@ export default function DashboardPage() {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className={`grid grid-cols-2 gap-2 ${isAnalyst ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
             <PeriodFilter value={displayedPeriod} fullStart={fullPeriodStart} fullEnd={fullPeriodEnd} onApply={applyPeriod} onClear={() => clearFilter('periodo')} />
+            {isAnalyst ? <GroupFilter value={filters.grupoId} groups={groups} onChange={applyGroupFilter} /> : null}
             <Metric label="Base" value={`${stats.totalTriagens.toLocaleString('pt-BR')} registros`} />
             <Metric label="Score" value={`${stats.menorScore}-${stats.maiorScore}`} />
             <Metric label="Atualização" value={formatDate(stats.atualizadoEm)} />
@@ -295,10 +345,10 @@ export default function DashboardPage() {
         />
         <ImpactCard
           icon={Banknote}
-          title="KPI 11 - Economia financeira estimada"
-          value={formatCurrency(stats.economiaFinanceiraEstimada)}
-          subtitle={`Custo médio considerado: ${formatCurrency(stats.custoMedioConsultaEspecializada)} por consulta.`}
-          detail="Estimativa conservadora para demonstrar o efeito da triagem como filtro."
+          title="KPI 11 - Custo estimado com encaminhamentos"
+          value={formatCurrency(stats.custoTotalEncaminhamentos)}
+          subtitle="Soma dos valores dos especialistas indicados no período."
+          detail="Considera apenas avaliações salvas com paciente encaminhado."
           tone="green"
         />
       </div>
@@ -332,6 +382,26 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold text-gray-500">{label}</p>
       <p className="whitespace-nowrap text-sm font-extrabold text-gray-900">{value}</p>
     </div>
+  );
+}
+
+function GroupFilter({ value, groups, onChange }: { value?: string; groups: Group[]; onChange: (groupId: string) => void }) {
+  return (
+    <label className="rounded-xl border border-blue-100 bg-white/80 px-3 py-2">
+      <span className="block text-xs font-semibold text-gray-500">Grupo</span>
+      <select
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-0.5 w-full min-w-0 bg-transparent text-sm font-extrabold text-gray-900 outline-none"
+      >
+        <option value="">Todos os grupos</option>
+        {groups.map((group) => (
+          <option key={group.id} value={group.id}>
+            {group.nome}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

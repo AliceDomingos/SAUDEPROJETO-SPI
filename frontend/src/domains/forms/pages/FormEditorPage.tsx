@@ -17,7 +17,7 @@ export default function FormEditorPage() {
 
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
-  const [groupId, setGroupId] = useState<number | ''>('');
+  const [groupId, setGroupId] = useState<string>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
   const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
@@ -46,7 +46,7 @@ export default function FormEditorPage() {
   useEffect(() => {
     if (!isEdit) return;
     setLoading(true);
-    getFormById(Number(id))
+    getFormById(id)
       .then((form) => {
         setNome(form.nome);
         setDescricao(form.descricao || '');
@@ -157,7 +157,7 @@ export default function FormEditorPage() {
       const payload = {
         nome,
         descricao: descricao || undefined,
-        groupId: groupId ? Number(groupId) : undefined,
+        groupId: groupId || undefined,
         perguntas: validPerguntas.map((q, i) => ({
           texto: q.texto.trim(),
           peso: derivedPeso(q),
@@ -168,7 +168,7 @@ export default function FormEditorPage() {
       };
 
       if (isEdit) {
-        await updateForm(Number(id), payload);
+        await updateForm(id, payload);
       } else {
         await createForm(payload);
       }
@@ -241,7 +241,7 @@ export default function FormEditorPage() {
               <label className="block text-sm font-medium mb-1">Grupo</label>
               <select
                 value={groupId}
-                onChange={(e) => setGroupId(e.target.value ? Number(e.target.value) : '')}
+                onChange={(e) => setGroupId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
                 <option value="">Todos os grupos</option>

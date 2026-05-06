@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Auth;
+using SPI.Application.DTOs.Auth;
 using SPI.Application.DTOs.Users;
 using SPI.Application.Configuration;
 using SPI.Application.Interfaces;
@@ -76,7 +76,7 @@ public sealed class AuthAppService : IAuthAppService
         };
     }
 
-    public async Task<UserResponseDto> GetCurrentUserAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<UserResponseDto> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetDetailedByIdAsync(userId, cancellationToken)
             ?? throw new KeyNotFoundException("Usuario nao encontrado.");
@@ -89,7 +89,7 @@ public sealed class AuthAppService : IAuthAppService
         return user.ToDto();
     }
 
-    public async Task<UserResponseDto> RegisterAsync(CreateUserRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<UserResponseDto> RegisterAsync(CreateUserRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -113,7 +113,7 @@ public sealed class AuthAppService : IAuthAppService
         }
 
         var requestedGroupIds = request.GroupIds
-            .Where(x => x > 0)
+            .Where(x => x != Guid.Empty)
             .Distinct()
             .OrderBy(x => x)
             .ToList();
@@ -169,8 +169,8 @@ public sealed class AuthAppService : IAuthAppService
 
         if (targetRole == UserRole.Manager && actor.Role == UserRole.Admin)
         {
-            var selectedGroupId = request.GroupIds.Where(x => x > 0).FirstOrDefault();
-            if (selectedGroupId > 0)
+            var selectedGroupId = request.GroupIds.Where(x => x != Guid.Empty).FirstOrDefault();
+            if (selectedGroupId != Guid.Empty)
             {
                 await _groupsAppService.AssignManagerAsync(selectedGroupId, user.Id, cancellationToken);
             }
@@ -182,7 +182,7 @@ public sealed class AuthAppService : IAuthAppService
         return createdUser.ToDto();
     }
 
-    public async Task SendPasswordInviteAsync(int targetUserId, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task SendPasswordInviteAsync(Guid targetUserId, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");

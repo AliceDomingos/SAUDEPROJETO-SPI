@@ -1,4 +1,4 @@
-﻿namespace SPI.Domain.Entities;
+namespace SPI.Domain.Entities;
 
 public sealed class FormQuestion
 {
@@ -31,8 +31,8 @@ public sealed class FormQuestion
         Ativa = true;
     }
 
-    public int Id { get; private set; }
-    public int FormTemplateId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid FormTemplateId { get; private set; }
     public string Texto { get; private set; } = string.Empty;
     public decimal Peso { get; private set; }
     public int Ordem { get; private set; }

@@ -1,13 +1,13 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
 namespace SPI.Api.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static int GetUserId(this ClaimsPrincipal principal)
+    public static Guid GetUserId(this ClaimsPrincipal principal)
     {
         var claim = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue("sub");
-        if (!int.TryParse(claim, out var userId))
+        if (!Guid.TryParse(claim, out var userId) || userId == Guid.Empty)
         {
             throw new UnauthorizedAccessException("Usuario autenticado invalido.");
         }

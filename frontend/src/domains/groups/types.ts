@@ -1,7 +1,7 @@
 export interface Group {
-  id: number;
+  id: string;
   nome: string;
-  gestor_id: number | null;
+  gestor_id: string | null;
   gestor_nome: string | null;
   ativo: boolean;
   quantidade_membros: number;
@@ -15,5 +15,5 @@ export interface GroupFormValues {
 
 export interface GroupUpsertInput {
   nome: string;
-  gestorId?: number | null;
+  gestorId?: string | null;
 }

@@ -1,4 +1,4 @@
-﻿namespace SPI.Application.Interfaces.Email;
+namespace SPI.Application.Interfaces.Email;
 
 public interface IEmailSender
 {

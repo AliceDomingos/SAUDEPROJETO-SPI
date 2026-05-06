@@ -8,7 +8,7 @@ import {
 import { SPI_QUESTIONS } from '../utils/questions';
 
 interface ScoreChartProps {
-  respostas: Record<number, number>;
+  respostas: Record<string, number>;
   questions?: { id: number; name: string }[];
 }
 

@@ -30,7 +30,7 @@ export interface PatientUpsertInput {
   cpf: string;
   data_nascimento: string;
   sexo: PatientSex;
-  groupId?: number;
+  groupId?: string;
   nome_responsavel?: string;
   telefone?: string;
   email?: string;

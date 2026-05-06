@@ -1,4 +1,4 @@
-﻿namespace SPI.Application.Configuration;
+namespace SPI.Application.Configuration;
 
 public sealed class PasswordInviteOptions
 {

@@ -1,8 +1,8 @@
-﻿namespace SPI.Domain.Common;
+namespace SPI.Domain.Common;
 
 public abstract class Entity
 {
-    public int Id { get; protected set; }
+    public Guid Id { get; protected set; } = Guid.NewGuid();
 }
 
 

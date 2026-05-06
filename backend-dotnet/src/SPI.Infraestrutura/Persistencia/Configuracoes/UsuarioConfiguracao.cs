@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

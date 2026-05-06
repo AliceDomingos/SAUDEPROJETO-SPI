@@ -1,4 +1,4 @@
-﻿namespace SPI.Domain.ValueObjects;
+namespace SPI.Domain.ValueObjects;
 
 public sealed record Email
 {

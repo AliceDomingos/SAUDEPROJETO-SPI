@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Mail;
 using SPI.Application.Interfaces.Email;
 using Microsoft.Extensions.Options;

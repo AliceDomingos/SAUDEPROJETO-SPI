@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.Enums;
 
 namespace SPI.Application.Services.Access;

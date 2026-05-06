@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using SPI.Application.DTOs.Evaluations;
 
@@ -36,6 +36,7 @@ internal static class EvaluationExportBuilder
         builder.AppendLine($"ScoreTotal;{evaluation.ScoreTotal.ToString(CultureInfo.InvariantCulture)}");
         builder.AppendLine($"PesoTotal;{evaluation.PesoTotal.ToString(CultureInfo.InvariantCulture)}");
         builder.AppendLine($"Classificacao;{Escape(evaluation.Classificacao)}");
+        builder.AppendLine($"Observacoes;{Escape(evaluation.Observacoes ?? string.Empty)}");
         builder.AppendLine($"DataAvaliacao;{evaluation.DataAvaliacao:O}");
         builder.AppendLine();
         builder.AppendLine("PerguntaId;Resposta");
@@ -60,6 +61,7 @@ internal static class EvaluationExportBuilder
             $"Score Total: {evaluation.ScoreTotal.ToString(CultureInfo.InvariantCulture)}",
             $"Peso Total: {evaluation.PesoTotal.ToString(CultureInfo.InvariantCulture)}",
             $"Classificacao: {evaluation.Classificacao}",
+            $"Observacoes: {evaluation.Observacoes ?? "Sem observacoes"}",
             $"Data: {evaluation.DataAvaliacao:dd/MM/yyyy HH:mm:ss}",
             "Respostas:"
         };

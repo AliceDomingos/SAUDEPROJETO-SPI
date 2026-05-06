@@ -1,4 +1,4 @@
-﻿namespace SPI.Application.Interfaces;
+namespace SPI.Application.Interfaces;
 
 public interface IUnitOfWork
 {

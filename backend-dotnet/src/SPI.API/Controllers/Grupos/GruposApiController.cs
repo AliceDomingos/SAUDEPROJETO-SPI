@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Groups;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -33,17 +33,17 @@ public sealed class GroupsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{groupId:int}")]
+    [HttpPut("{groupId:guid}")]
     [Authorize(Policy = "GroupManagement")]
-    public async Task<IActionResult> Update(int groupId, [FromBody] UpdateGroupRequestDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid groupId, [FromBody] UpdateGroupRequestDto request, CancellationToken cancellationToken)
     {
         var result = await _groupsAppService.UpdateAsync(groupId, request, User.GetUserId(), cancellationToken);
         return Ok(result);
     }
 
-    [HttpDelete("{groupId:int}")]
+    [HttpDelete("{groupId:guid}")]
     [Authorize(Policy = "GroupManagement")]
-    public async Task<IActionResult> Delete(int groupId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(Guid groupId, CancellationToken cancellationToken)
     {
         await _groupsAppService.DeleteAsync(groupId, User.GetUserId(), cancellationToken);
         return Ok(new { message = "Grupo excluido" });

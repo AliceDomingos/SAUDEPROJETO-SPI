@@ -26,12 +26,22 @@ export async function getPatients(): Promise<Patient[]> {
   return Array.isArray(data) ? data.map(normalizePatient) : [];
 }
 
+export async function getReusablePatients(): Promise<Patient[]> {
+  if (isMockMode()) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return mockPatients.map(normalizePatient);
+  }
+
+  const { data } = await api.get('/api/patients/reusable');
+  return Array.isArray(data) ? data.map(normalizePatient) : [];
+}
+
 export async function createPatient(data: CreatePatientInput): Promise<Patient> {
   if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     const created = normalizePatient({
-      id: Date.now(),
+      id: crypto.randomUUID(),
       nome: data.nome,
       cpf: data.cpf,
       data_nascimento: data.data_nascimento,
@@ -48,8 +58,8 @@ export async function createPatient(data: CreatePatientInput): Promise<Patient> 
       complemento: data.complemento || null,
       observacoes: data.observacoes || null,
       idade: calculateAge(data.data_nascimento),
-      avaliador_id: 2,
-      group_id: 1,
+      avaliador_id: null,
+      group_id: data.groupId ?? null,
       group_nome: 'Grupo Padrao',
       criado_em: new Date().toISOString(),
     });
@@ -62,7 +72,7 @@ export async function createPatient(data: CreatePatientInput): Promise<Patient> 
   return normalizePatient(response.data);
 }
 
-export async function updatePatient(id: number, data: UpdatePatientInput): Promise<Patient> {
+export async function updatePatient(id: string, data: UpdatePatientInput): Promise<Patient> {
   if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -94,7 +104,7 @@ export async function updatePatient(id: number, data: UpdatePatientInput): Promi
   return normalizePatient(response.data);
 }
 
-export async function deletePatient(id: number): Promise<void> {
+export async function deletePatient(id: string): Promise<void> {
   if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -108,9 +118,9 @@ export async function deletePatient(id: number): Promise<void> {
   await api.delete(`/api/patients/${id}`);
 }
 
-export async function getPatientEvaluations(patientId: number): Promise<Evaluation[]> {
+export async function getPatientEvaluations(patientId: string): Promise<Evaluation[]> {
   const evaluations = await getEvals();
-  return evaluations.filter((item) => Number(item.patientId) === patientId);
+  return evaluations.filter((item) => item.patientId === patientId);
 }
 
 export async function lookupAddressByCep(rawCep: string): Promise<CepLookupResult> {
@@ -160,10 +170,10 @@ function normalizePatient(payload: unknown): Patient {
   const sexo = rawSex === 'feminino' || rawSex === 'masculino' || rawSex === 'outro' ? rawSex : null;
 
   return {
-    id: Number(raw.id ?? raw.Id ?? 0),
+    id: asNullableString(raw.id ?? raw.Id) ?? '',
     nome: String(raw.nome ?? raw.Nome ?? ''),
     idade: resolveNullableNumber(raw.idade ?? raw.Idade, calculateAge(asNullableString(birthDate))),
-    avaliador_id: resolveNullableNumber(raw.avaliador_id ?? raw.avaliadorId ?? raw.AvaliadorId),
+    avaliador_id: asNullableString(raw.avaliador_id ?? raw.avaliadorId ?? raw.AvaliadorId),
     cpf: asNullableString(raw.cpf ?? raw.Cpf),
     data_nascimento: asNullableString(birthDate),
     sexo,
@@ -178,7 +188,7 @@ function normalizePatient(payload: unknown): Patient {
     numero: asNullableString(raw.numero ?? raw.Numero),
     complemento: asNullableString(raw.complemento ?? raw.Complemento),
     observacoes: asNullableString(raw.observacoes ?? raw.Observacoes),
-    group_id: resolveNullableNumber(raw.group_id ?? raw.groupId ?? raw.GroupId),
+    group_id: asNullableString(raw.group_id ?? raw.groupId ?? raw.GroupId),
     group_nome: asNullableString(raw.group_nome ?? raw.groupNome ?? raw.GroupNome),
     criado_em: String(raw.criado_em ?? raw.criadoEm ?? raw.CriadoEm ?? new Date().toISOString()),
   };

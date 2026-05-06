@@ -66,13 +66,13 @@ export default function GroupsPage() {
     await loadData();
   };
 
-  const handleEdit = async (groupId: number, data: UpdateGroupInput) => {
+  const handleEdit = async (groupId: string, data: UpdateGroupInput) => {
     const selectedManager = data.gestorId ? managersById.get(data.gestorId) ?? null : user ?? null;
     await updateGroup(groupId, data, selectedManager);
     await loadData();
   };
 
-  const handleDelete = async (groupId: number) => {
+  const handleDelete = async (groupId: string) => {
     await deleteGroup(groupId);
     await loadData();
   };

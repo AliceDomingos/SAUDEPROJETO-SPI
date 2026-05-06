@@ -10,7 +10,7 @@ interface UserEditDialogProps {
   user: User | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (userId: number, data: UpdateUserInput) => Promise<void>;
+  onSubmit: (userId: string, data: UpdateUserInput) => Promise<void>;
   groups?: Group[];
   isAdmin?: boolean;
 }
@@ -45,7 +45,7 @@ export default function UserEditDialog({ user, open, onClose, onSubmit, groups =
     setValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handleGroupIdsChange = (groupIds: number[]) => {
+  const handleGroupIdsChange = (groupIds: string[]) => {
     setValues((current) => ({ ...current, groupIds }));
   };
 

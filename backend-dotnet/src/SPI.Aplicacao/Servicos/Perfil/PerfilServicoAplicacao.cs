@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Profile;
+using SPI.Application.DTOs.Profile;
 using SPI.Application.DTOs.Users;
 using SPI.Application.Interfaces;
 using SPI.Application.Mappings;
@@ -18,7 +18,7 @@ public sealed class ProfileAppService : IProfileAppService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<UserResponseDto> GetAsync(int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<UserResponseDto> GetAsync(Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -26,7 +26,7 @@ public sealed class ProfileAppService : IProfileAppService
         return user.ToDto();
     }
 
-    public async Task<UserResponseDto> UpdateAsync(UpdateProfileRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<UserResponseDto> UpdateAsync(UpdateProfileRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");

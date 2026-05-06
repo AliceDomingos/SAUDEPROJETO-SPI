@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Users;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -25,16 +25,16 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{userId:int}/deactivate")]
-    public async Task<IActionResult> Deactivate(int userId, CancellationToken cancellationToken)
+    [HttpPut("{userId:guid}/deactivate")]
+    public async Task<IActionResult> Deactivate(Guid userId, CancellationToken cancellationToken)
     {
         await _usersAppService.DeactivateAsync(userId, User.GetUserId(), cancellationToken);
         return Ok(new { message = "Usuario desativado" });
     }
 
-    [HttpPut("{userId:int}/groups")]
+    [HttpPut("{userId:guid}/groups")]
     public async Task<IActionResult> UpdateGroups(
-        int userId,
+        Guid userId,
         [FromBody] UpdateUserGroupsRequestDto request,
         CancellationToken cancellationToken)
     {

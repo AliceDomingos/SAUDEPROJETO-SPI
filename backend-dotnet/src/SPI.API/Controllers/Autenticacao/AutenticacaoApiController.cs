@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Auth;
 using SPI.Application.DTOs.Users;
 using SPI.Application.Interfaces;
@@ -42,9 +42,9 @@ public sealed class AuthController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("users/{userId:int}/password-invite")]
+    [HttpPost("users/{userId:guid}/password-invite")]
     [Authorize(Policy = "UserManagement")]
-    public async Task<IActionResult> SendPasswordInvite(int userId, CancellationToken cancellationToken)
+    public async Task<IActionResult> SendPasswordInvite(Guid userId, CancellationToken cancellationToken)
     {
         await _authAppService.SendPasswordInviteAsync(userId, User.GetUserId(), cancellationToken);
         return Ok(new { message = "Convite enviado" });

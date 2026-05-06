@@ -4,6 +4,10 @@ namespace SPI.Api.Extensions;
 
 internal static class DevelopmentPortProcessCleaner
 {
+    private const int MaxReleaseAttempts = 5;
+    private static readonly TimeSpan ReleaseWaitTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(400);
+
     public static void StopProcessesUsingPorts(IEnumerable<int> ports, Action<string>? log = null)
     {
         if (!OperatingSystem.IsWindows())
@@ -20,30 +24,72 @@ internal static class DevelopmentPortProcessCleaner
 
     private static void StopProcessesUsingPort(int port, Action<string>? log)
     {
-        foreach (var processId in FindListeningProcessIds(port))
+        for (var attempt = 1; attempt <= MaxReleaseAttempts; attempt++)
         {
-            if (processId == Environment.ProcessId)
+            var processIds = FindListeningProcessIds(port)
+                .Where(processId => processId != Environment.ProcessId)
+                .ToArray();
+
+            if (processIds.Length == 0)
             {
-                continue;
+                return;
             }
 
-            try
+            foreach (var processId in processIds)
             {
-                using var process = Process.GetProcessById(processId);
-                var processName = process.ProcessName;
-                process.Kill(entireProcessTree: true);
-                process.WaitForExit(3000);
-                log?.Invoke($"Processo '{processName}' (PID {processId}) encerrado para liberar a porta {port}.");
+                try
+                {
+                    using var process = Process.GetProcessById(processId);
+                    var processName = process.ProcessName;
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit((int)ReleaseWaitTimeout.TotalMilliseconds);
+                    log?.Invoke($"Processo '{processName}' (PID {processId}) encerrado para liberar a porta {port}.");
+                }
+                catch (ArgumentException)
+                {
+                    // The process finished between netstat and kill.
+                }
+                catch (Exception ex)
+                {
+                    log?.Invoke($"Nao foi possivel encerrar o processo PID {processId} na porta {port}: {ex.Message}");
+                }
             }
-            catch (ArgumentException)
+
+            if (WaitUntilReleased(port, ReleaseWaitTimeout))
             {
-                // The process finished between netstat and kill.
+                return;
             }
-            catch (Exception ex)
+
+            if (attempt < MaxReleaseAttempts)
             {
-                log?.Invoke($"Nao foi possivel encerrar o processo PID {processId} na porta {port}: {ex.Message}");
+                Thread.Sleep(RetryDelay);
             }
         }
+
+        var remainingProcessIds = string.Join(", ", FindListeningProcessIds(port).Where(processId => processId != Environment.ProcessId));
+        log?.Invoke(string.IsNullOrWhiteSpace(remainingProcessIds)
+            ? $"A porta {port} ainda parece ocupada, mas nenhum processo LISTENING foi identificado pelo netstat."
+            : $"A porta {port} ainda esta ocupada apos tentativas de liberacao. PIDs restantes: {remainingProcessIds}.");
+    }
+
+    private static bool WaitUntilReleased(int port, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow.Add(timeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            var remainingProcessIds = FindListeningProcessIds(port)
+                .Where(processId => processId != Environment.ProcessId)
+                .ToArray();
+
+            if (remainingProcessIds.Length == 0)
+            {
+                return true;
+            }
+
+            Thread.Sleep(200);
+        }
+
+        return false;
     }
 
     private static IReadOnlyCollection<int> FindListeningProcessIds(int port)

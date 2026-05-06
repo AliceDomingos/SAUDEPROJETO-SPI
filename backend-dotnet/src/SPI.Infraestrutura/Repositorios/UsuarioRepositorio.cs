@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.Repositories;
 using SPI.Infrastructure.Data.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +23,7 @@ public sealed class UserRepository : IUserRepository
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
-    public Task<List<User>> ListByGroupIdsAsync(IReadOnlyCollection<int> groupIds, CancellationToken cancellationToken = default)
+    public Task<List<User>> ListByGroupIdsAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken = default)
     {
         if (groupIds.Count == 0)
         {
@@ -42,7 +42,7 @@ public sealed class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
-    public Task<List<User>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+    public Task<List<User>> ListByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default) =>
         _context.Users
             .AsNoTracking()
             .Include(x => x.GroupMemberships)
@@ -52,10 +52,10 @@ public sealed class UserRepository : IUserRepository
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
-    public Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-    public Task<User?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default) =>
+    public Task<User?> GetDetailedByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Users
             .Include(x => x.GroupMemberships)
             .ThenInclude(x => x.Group)
@@ -72,8 +72,8 @@ public sealed class UserRepository : IUserRepository
         _context.Users.AddAsync(user, cancellationToken).AsTask();
 
     public async Task ReplaceGroupMembershipsAsync(
-        int userId,
-        IReadOnlyCollection<int> groupIds,
+        Guid userId,
+        IReadOnlyCollection<Guid> groupIds,
         CancellationToken cancellationToken = default)
     {
         var memberships = await _context.UserGroupMemberships
@@ -82,7 +82,7 @@ public sealed class UserRepository : IUserRepository
 
         _context.UserGroupMemberships.RemoveRange(memberships);
 
-        foreach (var groupId in groupIds.Where(x => x > 0).Distinct())
+        foreach (var groupId in groupIds.Where(x => x != Guid.Empty).Distinct())
         {
             await _context.UserGroupMemberships.AddAsync(new UserGroupMembership(userId, groupId), cancellationToken);
         }

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SPI.Application.DTOs.Groups;
 
@@ -8,7 +8,7 @@ public sealed class UpdateGroupRequestDto
     [MaxLength(200)]
     public string Nome { get; init; } = string.Empty;
 
-    public int? GestorId { get; init; }
+    public Guid? GestorId { get; init; }
 }
 
 

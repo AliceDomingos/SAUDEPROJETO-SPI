@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Common;
+using SPI.Domain.Common;
 
 namespace SPI.Domain.Entities;
 
@@ -31,10 +31,10 @@ public sealed class Patient : Entity, IAggregateRoot
         string? numero,
         string? complemento,
         string? observacoes,
-        int? avaliadorId,
-        int groupId)
+        Guid? avaliadorId,
+        Guid groupId)
     {
-        if (groupId <= 0)
+        if (groupId == Guid.Empty)
         {
             throw new InvalidOperationException("Grupo invalido.");
         }
@@ -65,7 +65,7 @@ public sealed class Patient : Entity, IAggregateRoot
     public DateTime DataNascimento { get; private set; }
     public string Sexo { get; private set; } = string.Empty;
     public int? Idade { get; private set; }
-    public int? AvaliadorId { get; private set; }
+    public Guid? AvaliadorId { get; private set; }
     public string? NomeResponsavel { get; private set; }
     public string? Telefone { get; private set; }
     public string? Email { get; private set; }
@@ -77,15 +77,15 @@ public sealed class Patient : Entity, IAggregateRoot
     public string? Numero { get; private set; }
     public string? Complemento { get; private set; }
     public string? Observacoes { get; private set; }
-    public int GroupId { get; private set; }
+    public Guid GroupId { get; private set; }
     public DateTime CriadoEm { get; private set; }
-    public int? OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
 
     public User? Avaliador { get; private set; }
     public Group Group { get; private set; } = null!;
     public Organization? Organization { get; private set; }
 
-    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
+    public void AssignOrganization(Guid organizationId) => OrganizationId = organizationId;
 
     public IReadOnlyCollection<Evaluation> Avaliacoes => _avaliacoes;
     private readonly List<Evaluation> _avaliacoes = [];
@@ -106,9 +106,9 @@ public sealed class Patient : Entity, IAggregateRoot
         string? numero,
         string? complemento,
         string? observacoes,
-        int groupId)
+        Guid groupId)
     {
-        if (groupId <= 0)
+        if (groupId == Guid.Empty)
         {
             throw new InvalidOperationException("Grupo invalido.");
         }

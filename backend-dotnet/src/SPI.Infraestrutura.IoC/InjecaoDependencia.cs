@@ -1,4 +1,4 @@
-﻿using SPI.Application.Configuration;
+using SPI.Application.Configuration;
 using SPI.Application.Interfaces.Email;
 using SPI.Application.Interfaces.Seguranca;
 using SPI.Application.Interfaces;
@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IFormRepository, FormRepository>();
+        services.AddScoped<ISpecialistRepository, SpecialistRepository>();
         services.AddScoped<IEvaluationRepository, EvaluationRepository>();
         services.AddScoped<SPI.Domain.Repositories.IOrganizationRepository, SPI.Infrastructure.Data.Repositories.OrganizationRepository>();
 
@@ -50,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IProfileAppService, ProfileAppService>();
         services.AddScoped<IUsersAppService, UsersAppService>();
         services.AddScoped<IPatientsAppService, PatientsAppService>();
+        services.AddScoped<ISpecialistsAppService, SpecialistsAppService>();
         services.AddScoped<IEvaluationsAppService, EvaluationsAppService>();
 
         return services;

@@ -2,7 +2,7 @@ import type { Question } from '../types';
 
 export const SPI_QUESTIONS: Question[] = [
   {
-    id: 1,
+    id: '1',
     name: 'Relacionamento interpessoal',
     options: [
       { score: 1, text: 'Adequado para a idade. O paciente demonstra comportamento social típico' },
@@ -12,7 +12,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 2,
+    id: '2',
     name: 'Imitação e criação',
     options: [
       { score: 1, text: 'Adequado para a idade. Imita sons e gestos de forma normal' },
@@ -22,7 +22,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 3,
+    id: '3',
     name: 'Resposta emocional',
     options: [
       { score: 1, text: 'Adequado para a idade. Reage emocionalmente com coerência' },
@@ -32,7 +32,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 4,
+    id: '4',
     name: 'Uso do corpo',
     options: [
       { score: 1, text: 'Adequado para a idade. Movimentos coordenados e normais' },
@@ -42,7 +42,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 5,
+    id: '5',
     name: 'Uso de objetos',
     options: [
       { score: 1, text: 'Adequado para a idade. Usa brinquedos como esperado' },
@@ -52,7 +52,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 6,
+    id: '6',
     name: 'Adaptação a mudanças',
     options: [
       { score: 1, text: 'Adequado para a idade. Lida bem com transições' },
@@ -62,7 +62,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 7,
+    id: '7',
     name: 'Resposta visual',
     options: [
       { score: 1, text: 'Adequado para a idade. Uso visual normal dos sentidos' },
@@ -72,7 +72,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 8,
+    id: '8',
     name: 'Resposta auditiva',
     options: [
       { score: 1, text: 'Adequado para a idade. Resposta normal a sons' },
@@ -82,7 +82,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 9,
+    id: '9',
     name: 'Impressões e temores',
     options: [
       { score: 1, text: 'Adequado para a idade. Sem medos incomuns' },
@@ -92,7 +92,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 10,
+    id: '10',
     name: 'Comunicação verbal',
     options: [
       { score: 1, text: 'Adequado para a idade. Fala compreensível e contextualizada' },
@@ -102,7 +102,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 11,
+    id: '11',
     name: 'Comunicação não verbal',
     options: [
       { score: 1, text: 'Adequado para a idade. Gestos e expressões normais' },
@@ -112,7 +112,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 12,
+    id: '12',
     name: 'Nível de atividade',
     options: [
       { score: 1, text: 'Adequado para a idade. Nível de atividade normal' },
@@ -122,7 +122,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 13,
+    id: '13',
     name: 'Nível e consistência de resposta intelectual',
     options: [
       { score: 1, text: 'Adequado para a idade. Função intelectual normal' },
@@ -132,7 +132,7 @@ export const SPI_QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 14,
+    id: '14',
     name: 'Impressões gerais',
     options: [
       { score: 1, text: 'Dentro da normalidade para a idade' },

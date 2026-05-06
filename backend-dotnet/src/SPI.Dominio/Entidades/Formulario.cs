@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Common;
+using SPI.Domain.Common;
 
 namespace SPI.Domain.Entities;
 
@@ -14,8 +14,8 @@ public sealed class FormTemplate : Entity, IAggregateRoot
     public FormTemplate(
         string nome,
         string? descricao,
-        int criadoPorUsuarioId,
-        int? groupId,
+        Guid criadoPorUsuarioId,
+        Guid? groupId,
         IEnumerable<(string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)> questions,
         IEnumerable<(decimal ScoreMin, decimal ScoreMax, string Rotulo)>? ranges = null)
     {
@@ -24,7 +24,7 @@ public sealed class FormTemplate : Entity, IAggregateRoot
             throw new InvalidOperationException("Nome do formulario e obrigatorio.");
         }
 
-        if (criadoPorUsuarioId <= 0)
+        if (criadoPorUsuarioId == Guid.Empty)
         {
             throw new InvalidOperationException("Usuario criador invalido.");
         }
@@ -43,18 +43,18 @@ public sealed class FormTemplate : Entity, IAggregateRoot
 
     public string Nome { get; private set; } = string.Empty;
     public string? Descricao { get; private set; }
-    public int? GroupId { get; private set; }
-    public int CriadoPorUsuarioId { get; private set; }
+    public Guid? GroupId { get; private set; }
+    public Guid CriadoPorUsuarioId { get; private set; }
     public bool Ativo { get; private set; }
     public DateTime CriadoEm { get; private set; }
     public DateTime AtualizadoEm { get; private set; }
-    public int? OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
 
     public Group? Group { get; private set; }
     public User CriadoPorUsuario { get; private set; } = null!;
     public Organization? Organization { get; private set; }
 
-    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
+    public void AssignOrganization(Guid organizationId) => OrganizationId = organizationId;
     public IReadOnlyCollection<FormQuestion> Questions => _questions;
     public IReadOnlyCollection<FormClassificationRange> ClassificationRanges => _classificationRanges;
     public decimal PesoTotal => _questions.Sum(x => x.Peso);
@@ -62,7 +62,7 @@ public sealed class FormTemplate : Entity, IAggregateRoot
     public void Update(
         string nome,
         string? descricao,
-        int? groupId,
+        Guid? groupId,
         IEnumerable<(string Texto, decimal Peso, int Ordem, IReadOnlyCollection<(int Valor, string Descricao)>? Opcoes)> questions,
         IEnumerable<(decimal ScoreMin, decimal ScoreMax, string Rotulo)>? ranges = null)
     {
@@ -125,6 +125,5 @@ public sealed class FormTemplate : Entity, IAggregateRoot
         }
     }
 }
-
 
 

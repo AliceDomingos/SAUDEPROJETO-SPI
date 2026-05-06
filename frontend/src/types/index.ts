@@ -2,22 +2,22 @@
 export type UserRole = 'admin' | 'analista' | 'agente_saude' | 'gestor';
 
 export interface User {
-  id: number;
+  id: string;
   nome: string;
   email: string;
   role: UserRole;
   ativo: boolean;
   podeAvaliar?: boolean;
-  groupIds?: number[];
+  groupIds?: string[];
   groupNames?: string[];
   criado_em: string;
 }
 
 export interface Patient {
-  id: number;
+  id: string;
   nome: string;
   idade: number | null;
-  avaliador_id: number | null;
+  avaliador_id: string | null;
   cpf?: string | null;
   data_nascimento?: string | null;
   sexo?: 'masculino' | 'feminino' | 'outro' | null;
@@ -32,24 +32,38 @@ export interface Patient {
   numero?: string | null;
   complemento?: string | null;
   observacoes?: string | null;
-  group_id?: number | null;
+  group_id?: string | null;
   group_nome?: string | null;
   criado_em: string;
 }
 
 export interface Evaluation {
-  id: number;
-  patientId: number;
+  id: string;
+  patientId: string;
   patientNome: string;
-  avaliadorId: number;
+  avaliadorId: string;
   avaliadorNome: string;
   formId?: number;
   formNome?: string;
-  respostas: Record<number, number>;
+  respostas: Record<string, number>;
   scoreTotal: number;
   pesoTotal: number;
   classificacao: string;
+  observacoes?: string | null;
   dataAvaliacao: string;
+  referral?: EvaluationReferral | null;
+}
+
+export interface EvaluationReferral {
+  id: string;
+  evaluationId: string;
+  patientId: string;
+  encaminhado: boolean;
+  specialistId: string | null;
+  specialistNome: string | null;
+  especialidade: string | null;
+  custoEstimado: number;
+  criadoEm: string;
 }
 
 export interface DashboardStats {

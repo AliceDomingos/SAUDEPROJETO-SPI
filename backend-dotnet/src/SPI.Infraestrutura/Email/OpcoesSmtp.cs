@@ -1,4 +1,4 @@
-﻿namespace SPI.Infrastructure.Email;
+namespace SPI.Infrastructure.Email;
 
 public sealed class SmtpOptions
 {

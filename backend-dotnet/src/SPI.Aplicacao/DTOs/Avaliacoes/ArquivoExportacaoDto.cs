@@ -1,4 +1,4 @@
-﻿namespace SPI.Application.DTOs.Evaluations;
+namespace SPI.Application.DTOs.Evaluations;
 
 public sealed class ExportFileResultDto
 {

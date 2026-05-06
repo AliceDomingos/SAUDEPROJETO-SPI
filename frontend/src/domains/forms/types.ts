@@ -4,7 +4,7 @@ export interface FormQuestionOption {
 }
 
 export interface FormQuestion {
-  id?: number;
+  id?: string;
   texto: string;
   peso: number;
   ordem: number;
@@ -19,12 +19,12 @@ export interface FaixaClassificacao {
 }
 
 export interface Formulario {
-  id: number;
+  id: string;
   nome: string;
   descricao?: string;
-  groupId?: number;
+  groupId?: string;
   groupNome?: string;
-  criadoPorUsuarioId: number;
+  criadoPorUsuarioId: string;
   criadoPorNome: string;
   ativo: boolean;
   pesoTotal: number;
@@ -37,12 +37,12 @@ export interface Formulario {
 export interface CriarFormularioPayload {
   nome: string;
   descricao?: string;
-  groupId?: number;
+ groupId?: string;
   perguntas: { texto: string; peso: number; ordem: number; opcoes: FormQuestionOption[] }[];
   faixas: FaixaClassificacao[];
 }
 
 export interface Grupo {
-  id: number;
+  id: string;
   nome: string;
 }

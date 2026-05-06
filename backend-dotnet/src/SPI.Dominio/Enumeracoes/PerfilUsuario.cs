@@ -1,4 +1,4 @@
-﻿namespace SPI.Domain.Enums;
+namespace SPI.Domain.Enums;
 
 public enum UserRole
 {

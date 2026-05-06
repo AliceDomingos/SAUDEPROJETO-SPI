@@ -1,4 +1,4 @@
-﻿using SPI.Api.Extensions;
+using SPI.Api.Extensions;
 using SPI.Application.DTOs.Profile;
 using SPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;

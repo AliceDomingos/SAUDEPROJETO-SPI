@@ -4,7 +4,7 @@ namespace SPI.Application.DTOs.Patients;
 
 public sealed class PatientResponseDto
 {
-    public int Id { get; init; }
+    public Guid Id { get; init; }
     public string Nome { get; init; } = string.Empty;
     public string Cpf { get; init; } = string.Empty;
 
@@ -15,7 +15,7 @@ public sealed class PatientResponseDto
     public int? Idade { get; init; }
 
     [JsonPropertyName("avaliador_id")]
-    public int? AvaliadorId { get; init; }
+    public Guid? AvaliadorId { get; init; }
 
     [JsonPropertyName("nome_responsavel")]
     public string? NomeResponsavel { get; init; }
@@ -47,7 +47,7 @@ public sealed class PatientResponseDto
     public string? Observacoes { get; init; }
 
     [JsonPropertyName("group_id")]
-    public int GroupId { get; init; }
+    public Guid GroupId { get; init; }
 
     [JsonPropertyName("group_nome")]
     public string GroupNome { get; init; } = string.Empty;

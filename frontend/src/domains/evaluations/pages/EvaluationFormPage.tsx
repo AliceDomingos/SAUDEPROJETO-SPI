@@ -7,6 +7,11 @@ import { createEvaluation } from '@/domains/dashboard/api';
 import { getForms } from '@/domains/forms/api';
 import type { Formulario } from '@/domains/forms/types';
 import Dialog from '@/shared/components/dialog/Dialog';
+import { getGroups } from '@/domains/groups/api';
+import type { Group } from '@/domains/groups/types';
+import { createPatient, getReusablePatients, type CreatePatientInput } from '@/domains/patients/api';
+import PatientCreateDialog from '@/domains/patients/components/dialogs/PatientCreateDialog';
+import type { Patient } from '@/types';
 
 interface EvaluationFormPageProps {
   embedded?: boolean;
@@ -22,46 +27,68 @@ interface ResultData {
   answers: Record<number, number>;
   questions: { id: number; name: string }[];
 }
+const DEFAULT_FORM_ID = 'default';
 
 export default function EvaluationFormPage({ embedded = false, onCancel }: EvaluationFormPageProps) {
   const [formularios, setFormularios] = useState<Formulario[]>([]);
-  const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
   const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
+  const [formIdToSend, setFormIdToSend] = useState<string | undefined>(undefined);
 
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
-  const [existingPatientId, setExistingPatientId] = useState<number | null>(null);
-  const [newName, setNewName] = useState('');
+  const [existingPatientId, setExistingPatientId] = useState<string | null>(null);
+  const [createdPatient, setCreatedPatient] = useState<Patient | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [patientDialogOpen, setPatientDialogOpen] = useState(false);
   const [answers, setAnswers] = useState<EvaluationAnswers>({});
+  const [observations, setObservations] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resultData, setResultData] = useState<ResultData | null>(null);
 
   useEffect(() => {
     getForms().catch(() => []).then(setFormularios);
+    getGroups()
+      .catch(() => [])
+      .then((items) => {
+        setGroups(items);
+        if (items.length === 1) {
+          setSelectedGroupId(items[0].id);
+        }
+      });
   }, []);
 
-  function selectForm(formId: number) {
+  function selectForm(formId: string) {
     setSelectedFormId(formId);
     setAnswers({});
     setError('');
 
-    const form = formularios.find((f) => f.id === formId);
-    if (form) {
-      const questions: Question[] = form.perguntas
-        .sort((a, b) => a.ordem - b.ordem)
-        .map((p, idx) => {
-          const maxScore = Math.max(2, Math.round(p.peso));
-          return {
-            id: p.id ?? idx + 1,
-            ordem: idx + 1,
-            name: p.texto,
-            options: Array.from({ length: maxScore }, (_, i) => ({
-              score: i + 1,
-              text: i === 0 ? 'Nao apresenta' : i === maxScore - 1 ? 'Sempre apresenta' : `Nivel ${i + 1}`,
-            })),
-          };
-        });
-      setActiveQuestions(questions);
+    if (formId === DEFAULT_FORM_ID) {
+      setActiveQuestions(SPI_QUESTIONS);
+      setFormIdToSend(undefined);
+    } else {
+      const form = formularios.find((f) => f.id === formId);
+      if (form) {
+        if (form.groupId) {
+          setSelectedGroupId(form.groupId);
+        }
+        const questions: Question[] = form.perguntas
+          .sort((a, b) => a.ordem - b.ordem)
+          .map((p, idx) => {
+            const maxScore = Math.max(2, Math.round(p.peso));
+            return {
+              id: p.id ?? String(idx + 1),
+              name: p.texto,
+              options: Array.from({ length: maxScore }, (_, i) => ({
+                score: i + 1,
+                text: i === 0 ? 'Nao apresenta' : i === maxScore - 1 ? 'Sempre apresenta' : `Nivel ${i + 1}`,
+              })),
+            };
+          });
+        setActiveQuestions(questions);
+        setFormIdToSend(formId);
+      }
     }
   }
 
@@ -79,12 +106,16 @@ export default function EvaluationFormPage({ embedded = false, onCancel }: Evalu
       setError('Selecione um paciente existente.');
       return;
     }
-    if (mode === 'new' && !newName.trim()) {
-      setError('Informe o nome do paciente.');
+    if (mode === 'new') {
+      setError('Cadastre e selecione o novo paciente antes de salvar a avaliacao.');
       return;
     }
     if (answered < total) {
       setError(`Faltam ${total - answered} questao(oes) para responder.`);
+      return;
+    }
+    if (!selectedGroupId) {
+      setError('Selecione o grupo responsavel por esta avaliacao.');
       return;
     }
 
@@ -115,10 +146,41 @@ export default function EvaluationFormPage({ embedded = false, onCancel }: Evalu
       }
       const questions = activeQuestions.map((q) => ({ id: q.id, name: q.name }));
       setResultData({ score, pesoTotal, classification, color, cls, answers, questions });
+      const pid = existingPatientId!;
+      const createdEvaluation = await createEvaluation({
+        patientId: pid,
+        respostas: answers,
+        formId: formIdToSend,
+        groupId: selectedGroupId,
+        observacoes: observations.trim() || undefined,
+      });
+      const score = calcScore(answers);
+      const classification = getClassification(score);
+      navigate('/resultado', {
+        state: {
+          ...classification,
+          evaluationId: createdEvaluation.id,
+          patientId: pid,
+          patientNome: createdEvaluation.patientNome ?? createdPatient?.nome,
+          observacoes: createdEvaluation.observacoes ?? (observations.trim() || null),
+          answers,
+        },
+      });
     } catch {
       setError('Erro ao salvar avaliacao');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreatePatient = async (data: CreatePatientInput) => {
+    const patient = await createPatient(data);
+    setCreatedPatient(patient);
+    setExistingPatientId(patient.id);
+    setMode('existing');
+
+    if (!selectedGroupId && patient.group_id) {
+      setSelectedGroupId(patient.group_id);
     }
   };
 
@@ -316,6 +378,69 @@ export default function EvaluationFormPage({ embedded = false, onCancel }: Evalu
             {error}
           </div>
         )}
+        {mode === 'existing' ? (
+          <ExistingPatientSelector value={existingPatientId} createdPatient={createdPatient} onChange={setExistingPatientId} />
+        ) : (
+          <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 p-4">
+            <p className="text-sm font-semibold text-blue-800">Cadastrar paciente durante a avaliacao</p>
+            <p className="mt-1 text-xs text-blue-700">O cadastro sera salvo normalmente e tambem aparecera na tela de pacientes.</p>
+            <button
+              type="button"
+              onClick={() => setPatientDialogOpen(true)}
+              className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Abrir cadastro de paciente
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">Grupo responsavel pela avaliacao</label>
+          <select
+            value={selectedGroupId ?? ''}
+            onChange={(event) => setSelectedGroupId(event.target.value || null)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Selecione o grupo</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.nome}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500">O paciente pode ser reutilizado, mas a avaliacao ficara vinculada a este grupo.</p>
+        </div>
+      </div>
+
+      {/* Perguntas */}
+      <div className="space-y-3">
+        {activeQuestions.map((q) => (
+          <QuestionCard
+            key={q.id}
+            question={q}
+            value={answers[q.id] as number | undefined}
+            onChange={(score) => setAnswers((prev) => ({ ...prev, [q.id]: score }))}
+          />
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <label className="block text-sm font-semibold text-gray-700">Observacao do avaliador</label>
+        <textarea
+          value={observations}
+          onChange={(event) => setObservations(event.target.value.slice(0, 2000))}
+          rows={4}
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Registre aqui algo relevante que nao entrou nas perguntas da avaliacao."
+        />
+        <p className="mt-1 text-right text-xs text-gray-400">{observations.length}/2000</p>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
         <div className={`flex ${embedded ? 'justify-end gap-3 pb-2' : 'justify-center pb-8'}`}>
           {embedded && onCancel && (
@@ -338,18 +463,43 @@ export default function EvaluationFormPage({ embedded = false, onCancel }: Evalu
           </button>
         </div>
       </div>
-    </>
+
+      <PatientCreateDialog
+        open={patientDialogOpen}
+        onClose={() => setPatientDialogOpen(false)}
+        groups={groups}
+        defaultGroupId={selectedGroupId ? String(selectedGroupId) : groups.length === 1 ? String(groups[0].id) : ''}
+        requireGroupSelection={groups.length > 0}
+        onSubmit={handleCreatePatient}
+      />
+    </div>
   );
 }
 
-function ExistingPatientSelector({ value, onChange }: { value: number | null; onChange: (id: number) => void }) {
-  const [patients, setPatients] = useState<{ id: number; nome: string; idade: number | null }[]>([]);
+function ExistingPatientSelector({
+  value,
+  createdPatient,
+  onChange,
+}: {
+  value: string | null;
+  createdPatient: Patient | null;
+  onChange: (id: string) => void;
+}) {
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [show, setShow] = useState(false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    import('@/domains/patients/api').then(({ getPatients }) => getPatients().then(setPatients));
+    getReusablePatients().then(setPatients);
   }, []);
+
+  useEffect(() => {
+    if (!createdPatient) return;
+    setPatients((current) => {
+      const withoutDuplicate = current.filter((patient) => patient.id !== createdPatient.id);
+      return [createdPatient, ...withoutDuplicate];
+    });
+  }, [createdPatient]);
 
   const filtered = patients.filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()));
   const selected = patients.find((p) => p.id === value);

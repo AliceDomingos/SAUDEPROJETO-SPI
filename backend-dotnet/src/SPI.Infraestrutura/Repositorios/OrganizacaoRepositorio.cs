@@ -14,11 +14,11 @@ public sealed class OrganizationRepository : IOrganizationRepository
         _context = context;
     }
 
-    public Task<Organization?> GetByAdminIdAsync(int adminId, CancellationToken cancellationToken = default) =>
+    public Task<Organization?> GetByAdminIdAsync(Guid adminId, CancellationToken cancellationToken = default) =>
         _context.Organizations
             .FirstOrDefaultAsync(x => x.AdminId == adminId, cancellationToken);
 
-    public Task<Organization?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+    public Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Organizations
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 

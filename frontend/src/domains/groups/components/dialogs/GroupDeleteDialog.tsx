@@ -6,7 +6,7 @@ interface GroupDeleteDialogProps {
   group: Group | null;
   open: boolean;
   onClose: () => void;
-  onConfirm: (groupId: number) => Promise<void>;
+  onConfirm: (groupId: string) => Promise<void>;
 }
 
 export default function GroupDeleteDialog({

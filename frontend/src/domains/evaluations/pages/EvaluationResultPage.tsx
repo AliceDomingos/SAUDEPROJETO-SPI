@@ -1,6 +1,7 @@
-﻿import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import ScoreChart from '../components/ScoreChart';
 import { SPI_QUESTIONS } from '../utils/questions';
+import EvaluationReferralDecision from '../components/EvaluationReferralDecision';
 
 interface ResultState {
   score: number;
@@ -8,8 +9,10 @@ interface ResultState {
   classification: string;
   color: string;
   cls: string;
-  patientId: number;
-  answers: Record<number, number>;
+  evaluationId?: string;
+  patientId: string;
+  observacoes?: string | null;
+  answers: Record<string, number>;
   questions?: { id: number; name: string }[];
 }
 
@@ -22,7 +25,7 @@ export default function EvaluationResultPage() {
     return null;
   }
 
-  const { score, pesoTotal, classification, color, cls, answers, questions }: ResultState = state;
+  const { score, pesoTotal, classification, color, cls, evaluationId, observacoes,questions, answers }: ResultState = state;
   const labels = ['Normal', 'Leve', 'Moderado', 'Grave'];
 
   return (
@@ -48,6 +51,15 @@ export default function EvaluationResultPage() {
       </div>
 
       <ScoreChart respostas={answers} questions={questions} />
+
+      <EvaluationReferralDecision evaluationId={evaluationId} />
+
+      {observacoes ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700">Observacao do avaliador</h3>
+          <p className="whitespace-pre-wrap text-sm text-gray-700">{observacoes}</p>
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">Detalhamento por Dimensao</h3>

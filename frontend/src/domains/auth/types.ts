@@ -13,12 +13,12 @@ export interface SetPasswordFromInviteRequest {
 export interface TokenResponse {
   access_token: string;
   user: {
-    id: number;
+    id: string;
     nome: string;
     email: string;
     role: UserRole;
     ativo: boolean;
-    groupIds: number[];
+    groupIds: string[];
     groupNames: string[];
     criado_em: string;
   };

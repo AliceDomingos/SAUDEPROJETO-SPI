@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.Enums;
 using SPI.Domain.ValueObjects;
 using SPI.Infrastructure.Data.Persistence;
@@ -28,6 +28,8 @@ public static class DatabaseInitializer
             await EnsureSqliteOrganizationColumnsAsync(context, cancellationToken);
             await EnsureSqliteFormQuestionOptionsTableAsync(context, cancellationToken);
             await EnsureSqliteFormClassificationRangesTableAsync(context, cancellationToken);
+            await EnsureSqliteSpecialistTableAsync(context, cancellationToken);
+            await EnsureSqliteEvaluationReferralTableAsync(context, cancellationToken);
         }
         else if (databaseInitializationOptions.ApplyMigrationsOnStartup)
         {
@@ -126,11 +128,12 @@ public static class DatabaseInitializer
     {
         var tables = new[]
         {
-            ("users", "organization_id", "ALTER TABLE users ADD COLUMN organization_id INTEGER NULL;"),
-            ("groups", "organization_id", "ALTER TABLE groups ADD COLUMN organization_id INTEGER NULL;"),
-            ("patients", "organization_id", "ALTER TABLE patients ADD COLUMN organization_id INTEGER NULL;"),
-            ("evaluations", "organization_id", "ALTER TABLE evaluations ADD COLUMN organization_id INTEGER NULL;"),
-            ("form_templates", "organization_id", "ALTER TABLE form_templates ADD COLUMN organization_id INTEGER NULL;"),
+            ("users", "organization_id", "ALTER TABLE users ADD COLUMN organization_id TEXT NULL;"),
+            ("groups", "organization_id", "ALTER TABLE groups ADD COLUMN organization_id TEXT NULL;"),
+            ("patients", "organization_id", "ALTER TABLE patients ADD COLUMN organization_id TEXT NULL;"),
+            ("evaluations", "organization_id", "ALTER TABLE evaluations ADD COLUMN organization_id TEXT NULL;"),
+            ("evaluations", "observacoes", "ALTER TABLE evaluations ADD COLUMN observacoes TEXT NULL;"),
+            ("form_templates", "organization_id", "ALTER TABLE form_templates ADD COLUMN organization_id TEXT NULL;"),
         };
 
         var connection = context.Database.GetDbConnection();
@@ -189,6 +192,72 @@ public static class DatabaseInitializer
     }
 
     private static async Task EnsureSqliteFormClassificationRangesTableAsync(AppDbContext context, CancellationToken cancellationToken)
+    private static async Task EnsureSqliteEvaluationReferralTableAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            CREATE TABLE IF NOT EXISTS evaluation_referrals (
+                id TEXT NOT NULL CONSTRAINT PK_evaluation_referrals PRIMARY KEY,
+                evaluation_id TEXT NOT NULL,
+                patient_id TEXT NOT NULL,
+                encaminhado INTEGER NOT NULL,
+                specialist_id TEXT NULL,
+                specialist_nome TEXT NULL,
+                especialidade TEXT NULL,
+                custo_estimado TEXT NOT NULL DEFAULT '0',
+                criado_em TEXT NOT NULL,
+                criado_por_usuario_id TEXT NOT NULL,
+                organization_id TEXT NULL,
+                CONSTRAINT FK_evaluation_referrals_evaluations_evaluation_id FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE,
+                CONSTRAINT FK_evaluation_referrals_patients_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id),
+                CONSTRAINT FK_evaluation_referrals_specialists_specialist_id FOREIGN KEY (specialist_id) REFERENCES specialists(id),
+                CONSTRAINT FK_evaluation_referrals_users_criado_por_usuario_id FOREIGN KEY (criado_por_usuario_id) REFERENCES users(id),
+                CONSTRAINT FK_evaluation_referrals_organizations_organization_id FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_evaluation_referrals_evaluation_id ON evaluation_referrals(evaluation_id);
+            CREATE INDEX IF NOT EXISTS IX_evaluation_referrals_patient_id ON evaluation_referrals(patient_id);
+            CREATE INDEX IF NOT EXISTS IX_evaluation_referrals_specialist_id ON evaluation_referrals(specialist_id);
+            CREATE INDEX IF NOT EXISTS IX_evaluation_referrals_especialidade ON evaluation_referrals(especialidade);
+            """;
+
+        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        await EnsureSqliteColumnsAsync(
+            context,
+            "evaluation_referrals",
+            [
+                ("specialist_id", "ALTER TABLE evaluation_referrals ADD COLUMN specialist_id TEXT NULL;"),
+                ("specialist_nome", "ALTER TABLE evaluation_referrals ADD COLUMN specialist_nome TEXT NULL;")
+            ],
+            cancellationToken);
+    }
+
+    private static async Task EnsureSqliteSpecialistTableAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            CREATE TABLE IF NOT EXISTS specialists (
+                id TEXT NOT NULL CONSTRAINT PK_specialists PRIMARY KEY,
+                nome TEXT NOT NULL,
+                especialidade TEXT NOT NULL,
+                custo_consulta TEXT NOT NULL,
+                ativo INTEGER NOT NULL DEFAULT 1,
+                criado_em TEXT NOT NULL,
+                organization_id TEXT NULL,
+                CONSTRAINT FK_specialists_organizations_organization_id FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS IX_specialists_nome ON specialists(nome);
+            CREATE INDEX IF NOT EXISTS IX_specialists_especialidade ON specialists(especialidade);
+            CREATE INDEX IF NOT EXISTS IX_specialists_organization_id ON specialists(organization_id);
+            """;
+
+        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+    }
+
+    private static async Task EnsureSqliteColumnsAsync(
+        AppDbContext context,
+        string table,
+        IReadOnlyCollection<(string Column, string Sql)> columns,
+        CancellationToken cancellationToken)
     {
         var connection = context.Database.GetDbConnection();
         if (connection.State != ConnectionState.Open)
@@ -216,6 +285,22 @@ public static class DatabaseInitializer
                     ON form_classification_ranges(form_template_id);
                 """,
                 cancellationToken);
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = $"PRAGMA table_info('{table}');";
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            existingColumns.Add(reader.GetString(1));
+        }
+        await reader.CloseAsync();
+
+        foreach (var (column, sql) in columns)
+        {
+            if (!existingColumns.Contains(column))
+            {
+                await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            }
         }
     }
 

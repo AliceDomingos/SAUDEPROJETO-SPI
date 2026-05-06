@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.Repositories;
 using SPI.Infrastructure.Data.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,7 @@ public sealed class GroupRepository : IGroupRepository
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
-    public Task<List<Group>> ListByIdsAsync(IReadOnlyCollection<int> groupIds, CancellationToken cancellationToken = default)
+    public Task<List<Group>> ListByIdsAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken = default)
     {
         if (groupIds.Count == 0)
         {
@@ -38,7 +38,7 @@ public sealed class GroupRepository : IGroupRepository
             .ToListAsync(cancellationToken);
     }
 
-    public Task<List<Group>> ListByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default) =>
+    public Task<List<Group>> ListByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default) =>
         _context.Groups
             .AsNoTracking()
             .Include(x => x.Gestor)
@@ -47,10 +47,10 @@ public sealed class GroupRepository : IGroupRepository
             .OrderBy(x => x.Nome)
             .ToListAsync(cancellationToken);
 
-    public Task<Group?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+    public Task<Group?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Groups.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-    public Task<Group?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default) =>
+    public Task<Group?> GetDetailedByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Groups
             .Include(x => x.Gestor)
             .Include(x => x.Members)

@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 
 namespace SPI.Application.Interfaces.Seguranca;
 
@@ -8,7 +8,7 @@ public interface IPasswordInviteTokenService
     PasswordInviteTokenPayload Validate(string token);
 }
 
-public sealed record PasswordInviteTokenPayload(int UserId, string PasswordHashSnapshot);
+public sealed record PasswordInviteTokenPayload(Guid UserId, string PasswordHashSnapshot);
 
 
 

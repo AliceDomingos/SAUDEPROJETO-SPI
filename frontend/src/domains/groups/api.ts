@@ -21,7 +21,7 @@ export async function createGroup(data: CreateGroupInput, manager?: User | null)
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     const created = normalizeGroup({
-      id: Date.now(),
+      id: crypto.randomUUID(),
       nome: data.nome,
       gestor_id: data.gestorId ?? manager?.id ?? null,
       gestor_nome: manager?.nome ?? null,
@@ -43,11 +43,11 @@ export async function createGroup(data: CreateGroupInput, manager?: User | null)
   return normalizeGroup(created);
 }
 
-export async function updateGroup(id: number, data: UpdateGroupInput, manager?: User | null): Promise<Group> {
+export async function updateGroup(id: string, data: UpdateGroupInput, manager?: User | null): Promise<Group> {
   if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const group = mockGroups.find((item) => Number((item as Group).id) === id);
+    const group = mockGroups.find((item) => (item as Group).id === id);
     if (!group) {
       throw new Error('Grupo nao encontrado.');
     }
@@ -68,10 +68,10 @@ export async function updateGroup(id: number, data: UpdateGroupInput, manager?: 
   return normalizeGroup(updated);
 }
 
-export async function deleteGroup(id: number): Promise<void> {
+export async function deleteGroup(id: string): Promise<void> {
   if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 300));
-    const index = mockGroups.findIndex((item) => Number((item as Group).id) === id);
+    const index = mockGroups.findIndex((item) => (item as Group).id === id);
     if (index >= 0) {
       mockGroups.splice(index, 1);
     }
@@ -85,9 +85,9 @@ function normalizeGroup(payload: unknown): Group {
   const raw = payload as Record<string, unknown>;
 
   return {
-    id: Number(raw.id ?? raw.Id ?? 0),
+    id: asId(raw.id ?? raw.Id),
     nome: String(raw.nome ?? raw.Nome ?? ''),
-    gestor_id: resolveNullableNumber(raw.gestor_id ?? raw.gestorId ?? raw.GestorId),
+    gestor_id: asNullableString(raw.gestor_id ?? raw.gestorId ?? raw.GestorId),
     gestor_nome: asNullableString(raw.gestor_nome ?? raw.gestorNome ?? raw.GestorNome),
     ativo: Boolean(raw.ativo ?? raw.Ativo ?? false),
     quantidade_membros: Number(raw.quantidade_membros ?? raw.quantidadeMembros ?? raw.QuantidadeMembros ?? 0),
@@ -104,11 +104,6 @@ function asNullableString(value: unknown): string | null {
   return normalized ? normalized : null;
 }
 
-function resolveNullableNumber(value: unknown): number | null {
-  if (value == null || value === '') {
-    return null;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+function asId(value: unknown): string {
+  return asNullableString(value) ?? '';
 }

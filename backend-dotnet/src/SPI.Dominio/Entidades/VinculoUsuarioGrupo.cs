@@ -1,4 +1,4 @@
-﻿namespace SPI.Domain.Entities;
+namespace SPI.Domain.Entities;
 
 public sealed class UserGroupMembership
 {
@@ -6,14 +6,14 @@ public sealed class UserGroupMembership
     {
     }
 
-    public UserGroupMembership(int userId, int groupId)
+    public UserGroupMembership(Guid userId, Guid groupId)
     {
-        if (userId <= 0)
+        if (userId == Guid.Empty)
         {
             throw new InvalidOperationException("Usuario invalido.");
         }
 
-        if (groupId <= 0)
+        if (groupId == Guid.Empty)
         {
             throw new InvalidOperationException("Grupo invalido.");
         }
@@ -23,8 +23,8 @@ public sealed class UserGroupMembership
         CriadoEm = DateTime.UtcNow;
     }
 
-    public int UserId { get; private set; }
-    public int GroupId { get; private set; }
+    public Guid UserId { get; private set; }
+    public Guid GroupId { get; private set; }
     public DateTime CriadoEm { get; private set; }
 
     public User User { get; private set; } = null!;

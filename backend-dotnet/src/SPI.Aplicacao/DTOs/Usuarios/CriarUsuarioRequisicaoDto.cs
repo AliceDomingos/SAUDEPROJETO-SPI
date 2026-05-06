@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SPI.Application.DTOs.Users;
 
@@ -18,7 +18,7 @@ public sealed class CreateUserRequestDto
     [Required]
     public string Role { get; init; } = "agente_saude";
 
-    public IReadOnlyCollection<int> GroupIds { get; init; } = [];
+    public IReadOnlyCollection<Guid> GroupIds { get; init; } = [];
 }
 
 

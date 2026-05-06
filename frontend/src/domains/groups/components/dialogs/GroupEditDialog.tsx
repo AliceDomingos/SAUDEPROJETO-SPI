@@ -15,7 +15,7 @@ interface GroupEditDialogProps {
   group: Group | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (groupId: number, data: UpdateGroupInput) => Promise<void>;
+  onSubmit: (groupId: string, data: UpdateGroupInput) => Promise<void>;
   managers: User[];
   requireManager: boolean;
 }

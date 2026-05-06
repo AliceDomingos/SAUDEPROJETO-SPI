@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Entities;
+using SPI.Domain.Entities;
 using SPI.Domain.ReadModels;
 
 namespace SPI.Domain.Repositories;
@@ -6,16 +6,17 @@ namespace SPI.Domain.Repositories;
 public interface IEvaluationRepository
 {
     Task<List<EvaluationDetails>> ListDetailedAsync(CancellationToken cancellationToken = default);
-    Task<List<EvaluationDetails>> ListDetailedByGroupIdsAsync(IReadOnlyCollection<int> groupIds, CancellationToken cancellationToken = default);
-    Task<List<EvaluationDetails>> ListDetailedByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default);
-    Task<EvaluationDetails?> GetDetailedByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<bool> AnyByGroupIdAsync(int groupId, CancellationToken cancellationToken = default);
-    Task<bool> AnyByPatientIdAsync(int patientId, CancellationToken cancellationToken = default);
-    Task<Evaluation?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Evaluation?> GetByIdWithRelationsAsync(int id, CancellationToken cancellationToken = default);
+    Task<List<EvaluationDetails>> ListDetailedByGroupIdsAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken = default);
+    Task<List<EvaluationDetails>> ListDetailedByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default);
+    Task<EvaluationDetails?> GetDetailedByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> AnyByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default);
+    Task<bool> AnyByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
+    Task<Evaluation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Evaluation?> GetByIdWithRelationsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Evaluation?> GetByIdWithReferralAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddAsync(Evaluation evaluation, CancellationToken cancellationToken = default);
+    Task AddReferralAsync(EvaluationReferral referral, CancellationToken cancellationToken = default);
     void Remove(Evaluation evaluation);
 }
-
 
 

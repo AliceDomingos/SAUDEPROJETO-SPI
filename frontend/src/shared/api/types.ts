@@ -18,12 +18,12 @@ export interface LoginRequest {
 export interface TokenResponse {
   access_token: string;
   user: {
-    id: number;
+    id: string;
     nome: string;
     email: string;
     role: 'admin' | 'analista' | 'agente_saude' | 'gestor' | 'avaliador';
     ativo: boolean;
-    groupIds: number[];
+    groupIds: string[];
     groupNames: string[];
     criado_em: string;
   };
@@ -35,6 +35,6 @@ export interface PatientCreate {
 }
 
 export interface EvaluationCreate {
-  patient_id: number;
-  respostas: Record<number, number>;
+  patient_id: string;
+  respostas: Record<string, number>;
 }

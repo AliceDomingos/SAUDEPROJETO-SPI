@@ -20,7 +20,7 @@ interface PatientEditDialogProps {
   onClose: () => void;
   groups?: Group[];
   requireGroupSelection?: boolean;
-  onSubmit: (patientId: number, data: UpdatePatientInput) => Promise<void>;
+  onSubmit: (patientId: string, data: UpdatePatientInput) => Promise<void>;
 }
 
 export default function PatientEditDialog({

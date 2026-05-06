@@ -6,7 +6,7 @@ interface UserDeactivateDialogProps {
   user: User | null;
   open: boolean;
   onClose: () => void;
-  onConfirm: (userId: number) => Promise<void>;
+  onConfirm: (userId: string) => Promise<void>;
 }
 
 export default function UserDeactivateDialog({

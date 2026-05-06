@@ -11,7 +11,7 @@ export function buildGroupFormValues(group?: Group | null): GroupFormValues {
 export function mapGroupFormToInput(values: GroupFormValues): GroupUpsertInput {
   return {
     nome: values.nome.trim(),
-    gestorId: values.gestorId ? Number(values.gestorId) : null,
+    gestorId: values.gestorId || null,
   };
 }
 
@@ -25,7 +25,7 @@ export function validateGroupForm(
   }
 
   if (values.gestorId) {
-    const selectedManagerId = Number(values.gestorId);
+    const selectedManagerId = values.gestorId;
     if (!managers.some((manager) => manager.id === selectedManagerId)) {
       return 'Selecione um gestor valido.';
     }

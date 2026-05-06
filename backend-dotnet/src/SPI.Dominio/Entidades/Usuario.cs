@@ -1,4 +1,4 @@
-﻿using SPI.Domain.Common;
+using SPI.Domain.Common;
 using SPI.Domain.Enums;
 using SPI.Domain.ValueObjects;
 
@@ -36,11 +36,11 @@ public sealed class User : Entity, IAggregateRoot
     public UserRole Role { get; private set; } = UserRole.HealthAgent;
     public bool Ativo { get; private set; }
     public DateTime CriadoEm { get; private set; }
-    public int? OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
 
     public Organization? Organization { get; private set; }
 
-    public void AssignOrganization(int organizationId) => OrganizationId = organizationId;
+    public void AssignOrganization(Guid organizationId) => OrganizationId = organizationId;
 
     public IReadOnlyCollection<Patient> PacientesCriados => _pacientesCriados;
     public IReadOnlyCollection<Evaluation> AvaliacoesRealizadas => _avaliacoesRealizadas;

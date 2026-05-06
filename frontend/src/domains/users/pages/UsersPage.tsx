@@ -65,17 +65,17 @@ export default function UsersPage() {
     await refreshUsers();
   };
 
-  const handleEdit = async (userId: number, data: UpdateUserInput) => {
+  const handleEdit = async (userId: string, data: UpdateUserInput) => {
     await updateUser(userId, data);
     await refreshUsers();
   };
 
-  const handleDeactivate = async (userId: number) => {
+  const handleDeactivate = async (userId: string) => {
     await deactivateUser(userId);
     await refreshUsers();
   };
 
-  const handlePasswordInvite = async (userId: number) => {
+  const handlePasswordInvite = async (userId: string) => {
     await sendUserPasswordInvite(userId);
   };
 

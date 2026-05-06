@@ -1,5 +1,5 @@
 export interface Question {
-  id: number;
+  id: string;
   ordem?: number;
   name: string;
   options: {
@@ -16,5 +16,5 @@ export interface EvaluationResult {
 }
 
 export interface EvaluationAnswers {
-  [questionId: number]: number;
+  [questionId: string]: number;
 }

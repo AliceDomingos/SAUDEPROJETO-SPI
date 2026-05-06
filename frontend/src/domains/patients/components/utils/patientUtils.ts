@@ -95,7 +95,7 @@ export function mapPatientFormToInput(values: PatientFormValues): PatientUpsertI
     cpf: unmaskDigits(values.cpf),
     data_nascimento: values.dataNascimento,
     sexo: values.sexo,
-    groupId: values.groupId ? Number(values.groupId) : undefined,
+    groupId: values.groupId || undefined,
     nome_responsavel: nomeResponsavel || undefined,
     telefone: telefone || undefined,
     email: email || undefined,

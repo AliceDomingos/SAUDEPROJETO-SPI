@@ -1,10 +1,11 @@
-﻿import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/shared/store/authStore';
 import {
   LayoutDashboard,
   ClipboardList,
   ClipboardCheck,
   Layers3,
+  Stethoscope,
   Users,
   UserCog,
   LogOut,
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard' },
   { to: '/avaliacoes', icon: ClipboardList, label: 'Avaliacoes', permission: 'canViewEvaluations' },
   { to: '/formularios', icon: ClipboardCheck, label: 'Formularios', permission: 'canViewForms' },
+  { to: '/especialistas', icon: Stethoscope, label: 'Especialistas', permission: 'canViewSpecialists' },
   { to: '/pacientes', icon: Users, label: 'Pacientes', permission: 'canViewPatients' },
   { to: '/grupos', icon: Layers3, label: 'Grupos', permission: 'canManageGroups' },
   { to: '/usuarios', icon: UserCog, label: 'Usuarios', permission: 'canManageUsers' },
@@ -32,6 +34,7 @@ export default function PageLayout() {
     canViewEvaluations,
     canViewForms,
     canViewPatients,
+    canViewSpecialists,
   } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,6 +52,7 @@ export default function PageLayout() {
     canViewEvaluations,
     canViewForms,
     canViewPatients,
+    canViewSpecialists,
   };
   const filteredNav = navItems.filter((item) => permissions[item.permission]());
 

@@ -1,4 +1,4 @@
-﻿namespace SPI.Infrastructure.Data.Security;
+namespace SPI.Infrastructure.Data.Security;
 
 public sealed class JwtOptions
 {

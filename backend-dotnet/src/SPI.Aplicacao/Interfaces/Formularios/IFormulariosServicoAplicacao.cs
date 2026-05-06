@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Forms;
+using SPI.Application.DTOs.Forms;
 
 namespace SPI.Application.Interfaces;
 

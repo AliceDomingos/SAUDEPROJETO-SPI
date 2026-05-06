@@ -1,4 +1,4 @@
-﻿namespace SPI.Domain.Common;
+namespace SPI.Domain.Common;
 
 public interface IAggregateRoot
 {

@@ -379,6 +379,11 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("int")
                 .HasColumnName("patient_id");
 
+            b.Property<string>("Observacoes")
+                .HasMaxLength(2000)
+                .HasColumnType("nvarchar(2000)")
+                .HasColumnName("observacoes");
+
             b.Property<decimal>("PesoTotal")
                 .HasPrecision(10, 2)
                 .HasColumnType("decimal(10,2)")

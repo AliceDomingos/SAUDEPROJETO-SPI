@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getPatients } from '@/domains/patients/api';
+import { getReusablePatients } from '@/domains/patients/api';
 import type { Patient } from '@/types';
 
 interface PatientSelectorProps {
-  value: number | null;
-  onChange: (id: number) => void;
+  value: string | null;
+  onChange: (id: string) => void;
   error?: string;
 }
 
@@ -14,7 +14,7 @@ export default function PatientSelector({ value, onChange, error }: PatientSelec
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    getPatients().then(setPatients);
+    getReusablePatients().then(setPatients);
   }, []);
 
   const filtered = patients.filter((p: { nome: string }) =>

@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Groups;
+using SPI.Application.DTOs.Groups;
 using SPI.Application.Interfaces;
 using SPI.Application.Mappings;
 using SPI.Application.Services.Access;
@@ -26,7 +26,7 @@ public sealed class GroupsAppService : IGroupsAppService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IReadOnlyCollection<GroupResponseDto>> ListAsync(int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<GroupResponseDto>> ListAsync(Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -53,7 +53,7 @@ public sealed class GroupsAppService : IGroupsAppService
         return groups.Select(x => x.ToDto()).ToList();
     }
 
-    public async Task<GroupResponseDto> CreateAsync(CreateGroupRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<GroupResponseDto> CreateAsync(CreateGroupRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -67,7 +67,7 @@ public sealed class GroupsAppService : IGroupsAppService
             ? actor.Id
             : request.GestorId;
 
-        int resolvedGestorId;
+        Guid resolvedGestorId;
         if (gestorId.HasValue)
         {
             var gestor = await _userRepository.GetByIdAsync(gestorId.Value, cancellationToken)
@@ -101,7 +101,7 @@ public sealed class GroupsAppService : IGroupsAppService
         return created.ToDto();
     }
 
-    public async Task<GroupResponseDto> UpdateAsync(int groupId, UpdateGroupRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<GroupResponseDto> UpdateAsync(Guid groupId, UpdateGroupRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -119,7 +119,7 @@ public sealed class GroupsAppService : IGroupsAppService
             throw new UnauthorizedAccessException("Perfil de gestao so pode alterar o proprio grupo.");
         }
 
-        int resolvedGestorId;
+        Guid resolvedGestorId;
         if (actor.Role.HasManagerPrivileges())
         {
             resolvedGestorId = actor.Id;
@@ -150,7 +150,7 @@ public sealed class GroupsAppService : IGroupsAppService
         return updated.ToDto();
     }
 
-    public async Task DeleteAsync(int groupId, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid groupId, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -187,7 +187,7 @@ public sealed class GroupsAppService : IGroupsAppService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AssignManagerAsync(int groupId, int managerId, CancellationToken cancellationToken = default)
+    public async Task AssignManagerAsync(Guid groupId, Guid managerId, CancellationToken cancellationToken = default)
     {
         var group = await _groupRepository.GetByIdAsync(groupId, cancellationToken)
             ?? throw new KeyNotFoundException("Grupo nao encontrado.");

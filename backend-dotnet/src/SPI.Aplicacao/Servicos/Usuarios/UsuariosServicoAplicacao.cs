@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Users;
+using SPI.Application.DTOs.Users;
 using SPI.Application.Interfaces;
 using SPI.Application.Mappings;
 using SPI.Application.Services.Access;
@@ -22,7 +22,7 @@ public sealed class UsersAppService : IUsersAppService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IReadOnlyCollection<UserResponseDto>> ListAsync(int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<UserResponseDto>> ListAsync(Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -47,7 +47,7 @@ public sealed class UsersAppService : IUsersAppService
         return users.Select(x => x.ToDto()).ToList();
     }
 
-    public async Task DeactivateAsync(int userId, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task DeactivateAsync(Guid userId, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -85,9 +85,9 @@ public sealed class UsersAppService : IUsersAppService
     }
 
     public async Task UpdateGroupsAsync(
-        int userId,
+        Guid userId,
         UpdateUserGroupsRequestDto request,
-        int actorUserId,
+        Guid actorUserId,
         CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
@@ -102,7 +102,7 @@ public sealed class UsersAppService : IUsersAppService
             ?? throw new KeyNotFoundException("Usuario nao encontrado.");
 
         var allRequestedGroups = await _groupRepository.ListByIdsAsync(
-            request.GroupIds.Where(x => x > 0).Distinct().ToArray(),
+            request.GroupIds.Where(x => x != Guid.Empty).Distinct().ToArray(),
             cancellationToken);
 
         var requestedGroupIds = allRequestedGroups
@@ -110,7 +110,7 @@ public sealed class UsersAppService : IUsersAppService
             .OrderBy(x => x)
             .ToArray();
 
-        var validCount = request.GroupIds.Where(x => x > 0).Distinct().Count();
+        var validCount = request.GroupIds.Where(x => x != Guid.Empty).Distinct().Count();
         if (allRequestedGroups.Count != validCount)
         {
             throw new KeyNotFoundException("Um ou mais grupos informados nao existem.");
@@ -151,7 +151,7 @@ public sealed class UsersAppService : IUsersAppService
             var selectedGroupId = requestedGroupIds
                 .FirstOrDefault(x => adminScope.OperationalGroupIds.Contains(x));
 
-            if (selectedGroupId > 0)
+            if (selectedGroupId != Guid.Empty)
             {
                 await _groupsAppService.AssignManagerAsync(selectedGroupId, user.Id, cancellationToken);
             }

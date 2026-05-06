@@ -1,4 +1,4 @@
-﻿namespace SPI.Infrastructure.Data.Seed;
+namespace SPI.Infrastructure.Data.Seed;
 
 public sealed class DatabaseInitializationOptions
 {

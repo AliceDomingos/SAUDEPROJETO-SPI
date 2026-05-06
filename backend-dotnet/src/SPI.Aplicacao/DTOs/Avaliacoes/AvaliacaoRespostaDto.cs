@@ -1,21 +1,23 @@
-﻿namespace SPI.Application.DTOs.Evaluations;
+namespace SPI.Application.DTOs.Evaluations;
 
 public sealed class EvaluationResponseDto
 {
-    public int Id { get; init; }
-    public int PatientId { get; init; }
+    public Guid Id { get; init; }
+    public Guid PatientId { get; init; }
     public string PatientNome { get; init; } = string.Empty;
-    public int AvaliadorId { get; init; }
+    public Guid AvaliadorId { get; init; }
     public string AvaliadorNome { get; init; } = string.Empty;
-    public int GroupId { get; init; }
+    public Guid GroupId { get; init; }
     public string GroupNome { get; init; } = string.Empty;
-    public int? FormId { get; init; }
+    public Guid? FormId { get; init; }
     public string? FormNome { get; init; }
-    public IReadOnlyDictionary<int, int> Respostas { get; init; } = new Dictionary<int, int>();
+    public IReadOnlyDictionary<string, int> Respostas { get; init; } = new Dictionary<string, int>();
     public decimal ScoreTotal { get; init; }
     public decimal PesoTotal { get; init; }
     public string Classificacao { get; init; } = string.Empty;
+    public string? Observacoes { get; init; }
     public DateTime DataAvaliacao { get; init; }
+    public EvaluationReferralResponseDto? Referral { get; init; }
 }
 
 

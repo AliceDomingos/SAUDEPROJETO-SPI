@@ -6,6 +6,7 @@ import type { Evaluation } from '@/types';
 import ScoreChart from '../components/ScoreChart';
 import { SPI_QUESTIONS } from '../utils/questions';
 import { ArrowLeft } from 'lucide-react';
+import EvaluationReferralDecision from '../components/EvaluationReferralDecision';
 
 export default function EvaluationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +16,7 @@ export default function EvaluationDetailPage() {
 
   useEffect(() => {
     getEvals().then((data: Evaluation[]) => {
-      const found = data.find((e: Evaluation) => e.id === Number(id));
+      const found = data.find((e: Evaluation) => e.id === id);
       setEvalData(found || null);
       if (found?.formId) {
         getFormById(found.formId).then((form) => {
@@ -88,6 +89,19 @@ export default function EvaluationDetailPage() {
 
       {/* Radar */}
       <ScoreChart respostas={evalData.respostas} questions={formQuestions ?? undefined} />
+
+      <EvaluationReferralDecision
+        evaluationId={evalData.id}
+        currentReferral={evalData.referral}
+        onSaved={(referral) => setEvalData((current) => (current ? { ...current, referral } : current))}
+      />
+
+      {evalData.observacoes ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Observacao do avaliador</h3>
+          <p className="whitespace-pre-wrap text-sm text-gray-700">{evalData.observacoes}</p>
+        </div>
+      ) : null}
 
       {/* Breakdown */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">

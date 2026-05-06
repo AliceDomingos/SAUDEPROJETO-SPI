@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using SPI.Application.DTOs.Users;
 
 namespace SPI.Application.DTOs.Auth;

@@ -7,7 +7,7 @@ interface PatientDeleteDialogProps {
   patient: Patient | null;
   open: boolean;
   onClose: () => void;
-  onConfirm: (patientId: number) => Promise<void>;
+  onConfirm: (patientId: string) => Promise<void>;
 }
 
 export default function PatientDeleteDialog({

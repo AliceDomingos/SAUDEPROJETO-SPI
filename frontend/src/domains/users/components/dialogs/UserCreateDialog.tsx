@@ -50,7 +50,7 @@ export default function UserCreateDialog({
     }));
   };
 
-  const handleGroupIdsChange = (groupIds: number[]) => {
+  const handleGroupIdsChange = (groupIds: string[]) => {
     setValues((current) => ({
       ...current,
       groupIds,

@@ -1,4 +1,4 @@
-﻿using SPI.Application.DTOs.Patients;
+using SPI.Application.DTOs.Patients;
 using SPI.Application.Interfaces;
 using SPI.Application.Mappings;
 using SPI.Application.Services.Access;
@@ -31,7 +31,12 @@ public sealed class PatientsAppService : IPatientsAppService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IReadOnlyCollection<PatientResponseDto>> ListAsync(int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<PatientResponseDto>> ListAsync(Guid actorUserId, CancellationToken cancellationToken = default)
+    {
+        return await ListReusableAsync(actorUserId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<PatientResponseDto>> ListReusableAsync(Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -43,19 +48,23 @@ public sealed class PatientsAppService : IPatientsAppService
 
         var accessScope = AccessScopeResolver.Resolve(actor);
         List<SPI.Domain.Entities.Patient> patients;
-        if (accessScope.IsAdmin && accessScope.OrganizationId.HasValue)
+        if (accessScope.OrganizationId.HasValue)
         {
-            patients = await _patientRepository.ListByOrganizationIdAsync(accessScope.OrganizationId.Value, cancellationToken);
+            patients = await _patientRepository.ListReusableByOrganizationIdAsync(accessScope.OrganizationId.Value, cancellationToken);
+        }
+        else if (accessScope.IsAdmin)
+        {
+            patients = await _patientRepository.ListAsync(cancellationToken);
         }
         else
         {
-            patients = await _patientRepository.ListByGroupIdsAsync(accessScope.OperationalGroupIds, cancellationToken);
+            patients = await _patientRepository.ListAsync(cancellationToken);
         }
 
         return patients.Select(x => x.ToDto()).ToList();
     }
 
-    public async Task<PatientResponseDto> CreateAsync(CreatePatientRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<PatientResponseDto> CreateAsync(CreatePatientRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -88,7 +97,7 @@ public sealed class PatientsAppService : IPatientsAppService
             request.Observacoes,
             actorUserId,
             group.Id);
-        if (accessScope.IsAdmin && accessScope.OrganizationId.HasValue)
+        if (accessScope.OrganizationId.HasValue)
         {
             patient.AssignOrganization(accessScope.OrganizationId.Value);
         }
@@ -102,7 +111,7 @@ public sealed class PatientsAppService : IPatientsAppService
         return createdPatient.ToDto();
     }
 
-    public async Task<PatientResponseDto> UpdateAsync(int id, UpdatePatientRequestDto request, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task<PatientResponseDto> UpdateAsync(Guid id, UpdatePatientRequestDto request, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -147,7 +156,7 @@ public sealed class PatientsAppService : IPatientsAppService
         return patient.ToDto();
     }
 
-    public async Task DeleteAsync(int id, int actorUserId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, Guid actorUserId, CancellationToken cancellationToken = default)
     {
         var actor = await _userRepository.GetDetailedByIdAsync(actorUserId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Usuario autenticado nao encontrado.");
@@ -175,9 +184,9 @@ public sealed class PatientsAppService : IPatientsAppService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private static int ResolveGroupId(int? requestGroupId, UserRole actorRole, AccessScope accessScope)
+    private static Guid ResolveGroupId(Guid? requestGroupId, UserRole actorRole, AccessScope accessScope)
     {
-        if (requestGroupId.HasValue && requestGroupId.Value > 0)
+        if (requestGroupId.HasValue && requestGroupId.Value != Guid.Empty)
         {
             if (!accessScope.IsAdmin && !accessScope.OperationalGroupIds.Contains(requestGroupId.Value))
             {
@@ -195,9 +204,9 @@ public sealed class PatientsAppService : IPatientsAppService
         throw new InvalidOperationException("O grupo do paciente deve ser informado.");
     }
 
-    private static int ResolveExistingOrRequestedGroupId(int? requestGroupId, int currentGroupId, UserRole actorRole, AccessScope accessScope)
+    private static Guid ResolveExistingOrRequestedGroupId(Guid? requestGroupId, Guid currentGroupId, UserRole actorRole, AccessScope accessScope)
     {
-        if (requestGroupId.HasValue && requestGroupId.Value > 0)
+        if (requestGroupId.HasValue && requestGroupId.Value != Guid.Empty)
         {
             return ResolveGroupId(requestGroupId, actorRole, accessScope);
         }

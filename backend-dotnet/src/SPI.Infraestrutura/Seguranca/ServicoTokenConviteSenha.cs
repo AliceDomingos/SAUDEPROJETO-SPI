@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using SPI.Application.Configuration;
@@ -74,7 +74,7 @@ public sealed class PasswordInviteTokenService : IPasswordInviteTokenService
         }
 
         var userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        if (!int.TryParse(userIdValue, out var userId) || userId <= 0)
+        if (!Guid.TryParse(userIdValue, out var userId) || userId == Guid.Empty)
         {
             throw new InvalidOperationException("Token de convite invalido.");
         }

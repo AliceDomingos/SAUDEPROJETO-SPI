@@ -6,14 +6,14 @@ export interface CreateUserInput {
   nome: string;
   email: string;
   role: UserRole;
-  groupIds?: number[];
+  groupIds?: string[];
 }
 
 export interface UpdateUserInput {
   nome: string;
   email: string;
   role: UserRole;
-  groupIds?: number[];
+  groupIds?: string[];
 }
 
 export async function getUsers() {
@@ -29,7 +29,7 @@ export async function createUser(data: CreateUserInput) {
     await new Promise((r) => setTimeout(r, 300));
 
     const u = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       nome: data.nome,
       email: data.email,
       role: data.role,
@@ -44,7 +44,7 @@ export async function createUser(data: CreateUserInput) {
   return (await api.post('/api/auth/register', data)).data;
 }
 
-export async function updateUser(id: number, data: UpdateUserInput) {
+export async function updateUser(id: string, data: UpdateUserInput) {
   if (isMockMode()) {
     await new Promise((r) => setTimeout(r, 300));
     const user = mockUsers.find((u) => u.id === id);
@@ -66,7 +66,7 @@ export async function updateUser(id: number, data: UpdateUserInput) {
   }
 }
 
-export async function deactivateUser(id: number) {
+export async function deactivateUser(id: string) {
   if (isMockMode()) {
     await new Promise((r) => setTimeout(r, 300));
     const user = mockUsers.find((u) => u.id === id);
@@ -76,7 +76,7 @@ export async function deactivateUser(id: number) {
   await api.put(`/api/users/${id}/deactivate`);
 }
 
-export async function sendUserPasswordInvite(id: number) {
+export async function sendUserPasswordInvite(id: string) {
   if (isMockMode()) {
     await new Promise((r) => setTimeout(r, 300));
     const user = mockUsers.find((u) => u.id === id);

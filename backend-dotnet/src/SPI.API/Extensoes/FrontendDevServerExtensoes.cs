@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 
 namespace SPI.Api.Extensions;
 
 public static class FrontendDevServerExtensions
 {
+    private const int DefaultVitePort = 5173;
     private const int PreferredFrontendPort = 5174;
     private static readonly Lock StartLock = new();
     private static readonly Lock BrowserLock = new();
@@ -41,7 +42,7 @@ public static class FrontendDevServerExtensions
         var frontendUrl = $"http://localhost:{frontendPort}";
 
         DevelopmentPortProcessCleaner.StopProcessesUsingPorts(
-            [frontendPort],
+            [DefaultVitePort, frontendPort],
             message => app.Logger.LogInformation("{Message}", message));
 
         if (IsPortOccupied(frontendPort))
