@@ -250,7 +250,7 @@ export default function DashboardPage() {
               <Sparkles className="h-4 w-4" />
               NEXOS · Dashboard Triagem
             </div>
-            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">Indicadores gerenciais SPI</h2>
+            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">Indicadores gerenciais Nexos</h2>
             <p className="mt-1 text-sm text-gray-500">Base integrada via API: {stats.fonte}</p>
 
             {activeChips.length ? (
@@ -285,7 +285,7 @@ export default function DashboardPage() {
       <SectionTitle title="Visão Geral" />
       <StatsCards
         items={[
-          { icon: ClipboardList, label: 'Crianças triadas', value: stats.totalTriagens.toLocaleString('pt-BR'), tone: 'blue', tag: 'KPI 01', foot: filtersActive ? 'recorte selecionado no dashboard' : 'base completa do CSV' },
+          { icon: ClipboardList, label: 'Pacientes triados', value: stats.totalTriagens.toLocaleString('pt-BR'), tone: 'blue', tag: 'KPI 01', foot: filtersActive ? 'recorte selecionado no dashboard' : 'base completa do CSV' },
           { icon: TrendingUp, label: 'Score médio', value: stats.scoreMedio.toFixed(1), tone: 'amber', tag: 'KPI 02', foot: 'CARS-2 / M-CHAT-R/F' },
           { icon: Activity, label: 'Casos severos', value: stats.casosSeveros, tone: 'red', tag: 'KPI 03', foot: `${formatPercent((stats.casosSeveros * 100) / Math.max(stats.totalTriagens, 1))} das triagens` },
           { icon: CalendarDays, label: 'Triagens no mês', value: stats.triagensMesAtual, tone: 'green', tag: 'KPI 04', foot: 'último mês da base' },
@@ -293,7 +293,7 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.45fr_1fr]">
-        <ChartCard title="Crianças triadas por mês" subtitle="Clique em uma coluna para filtrar pelo mês">
+        <ChartCard title="Pacientes triados por mês" subtitle="Clique em uma coluna para filtrar pelo mês">
           <MonthlyBars data={monthlyData.slice(-16)} selectedLabel={filters.monthLabel} onSelect={applyMonthlyFilter} />
         </ChartCard>
 
@@ -319,7 +319,7 @@ export default function DashboardPage() {
             progressValue: stats.taxaEncaminhamento,
             tone: 'blue',
             tag: 'KPI 07',
-            foot: `${stats.encaminhados.toLocaleString('pt-BR')} de ${stats.totalTriagens.toLocaleString('pt-BR')} crianças triadas foram encaminhadas`,
+            foot: `${stats.encaminhados.toLocaleString('pt-BR')} de ${stats.totalTriagens.toLocaleString('pt-BR')} pacientes triados foram encaminhados`,
           },
         ]}
       />
@@ -340,7 +340,7 @@ export default function DashboardPage() {
           icon={CheckCircle2}
           title="KPI 10 - Consultas especializadas evitadas"
           value={`${stats.consultasEvitadas.toLocaleString('pt-BR')} consultas evitadas`}
-          subtitle="Sem triagem, toda criança iria direto ao especialista."
+          subtitle="Sem triagem, todo paciente iria direto ao especialista."
           detail={`${stats.totalTriagens.toLocaleString('pt-BR')} triadas - ${stats.encaminhados.toLocaleString('pt-BR')} encaminhadas = ${stats.consultasEvitadas.toLocaleString('pt-BR')} evitadas`}
         />
         <ImpactCard

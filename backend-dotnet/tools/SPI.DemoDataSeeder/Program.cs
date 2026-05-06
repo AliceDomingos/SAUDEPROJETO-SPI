@@ -104,6 +104,22 @@ foreach (var row in rows)
         context.EvaluationReferrals.Add(referral);
         referralCount++;
     }
+    else
+    {
+        var referral = new EvaluationReferral(
+            evaluation.Id,
+            patient.Id,
+            agent.Id,
+            false,
+            null,
+            null,
+            null,
+            0);
+
+        referral.AssignOrganization(organization.Id);
+        SetPrivateProperty(referral, nameof(EvaluationReferral.CriadoEm), row.DataTriagem ?? DateTime.UtcNow);
+        context.EvaluationReferrals.Add(referral);
+    }
 }
 
 await context.SaveChangesAsync();

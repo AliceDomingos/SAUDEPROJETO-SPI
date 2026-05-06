@@ -6,6 +6,7 @@ import type { Formulario } from '../types';
 import FormCreateDialog from '../components/FormCreateDialog';
 import DataTable, { type Column } from '@/shared/components/table/DataTable';
 import { useAuthStore } from '@/shared/store/authStore';
+import SearchFiltersPanel from '@/shared/components/filters/SearchFiltersPanel';
 
 export default function FormsListPage() {
   const navigate = useNavigate();
@@ -104,11 +105,15 @@ export default function FormsListPage() {
           )}
         </div>
 
-        <input
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Buscar por nome..."
-          className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+        <SearchFiltersPanel
+          title="Encontre formulários com mais rapidez"
+          description="Busque pelo nome do formulário."
+          searchLabel="Buscar formulário"
+          searchValue={filter}
+          searchPlaceholder="Buscar por nome..."
+          onSearchChange={setFilter}
+          hasActiveFilters={filter.trim().length > 0}
+          onClear={() => setFilter('')}
         />
 
         {loading ? (
