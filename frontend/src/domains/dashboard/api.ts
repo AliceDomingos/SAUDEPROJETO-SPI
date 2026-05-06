@@ -44,6 +44,16 @@ export interface SpiMockSusDashboard {
   economiaFinanceiraEstimada: number;
   custoTotalEncaminhamentos: number;
   custoMedioConsultaEspecializada: number;
+  mesAnterior: {
+    encaminhados: number;
+    consultasEvitadas: number;
+    custoTotalEncaminhamentos: number;
+  };
+  mesAtual: {
+    encaminhados: number;
+    consultasEvitadas: number;
+    custoTotalEncaminhamentos: number;
+  };
   taxaEncaminhamento: number;
   taxaComparecimento: number;
   taxaDiagnosticoConfirmado: number;
@@ -78,6 +88,16 @@ interface SystemDashboardSummary {
     distribuicaoTriagensMensais: DashboardDistributionItem[];
     distribuicaoRisco: DashboardDistributionItem[];
     distribuicaoEspecialista: DashboardDistributionItem[];
+    mesAnterior?: {
+      encaminhados: number;
+      consultasEvitadas: number;
+      custoTotalEncaminhamentos: number;
+    };
+    mesAtual?: {
+      encaminhados: number;
+      consultasEvitadas: number;
+      custoTotalEncaminhamentos: number;
+    };
   };
   ultimasAvaliacoes?: Evaluation[];
 }
@@ -147,6 +167,8 @@ export async function getDashboardStats(filter?: DashboardFilter): Promise<SpiMo
     economiaFinanceiraEstimada: 0,
     custoTotalEncaminhamentos,
     custoMedioConsultaEspecializada: 1000,
+    mesAnterior: { encaminhados: 0, consultasEvitadas: 0, custoTotalEncaminhamentos: 0 },
+    mesAtual: { encaminhados: 0, consultasEvitadas: 0, custoTotalEncaminhamentos: 0 },
     taxaEncaminhamento: filteredEvals.length ? Math.round((encaminhados * 1000) / filteredEvals.length) / 10 : 0,
     taxaComparecimento: 0,
     taxaDiagnosticoConfirmado: 0,
@@ -206,6 +228,16 @@ function dashboardFromSystemSummary(system: SystemDashboardSummary): SpiMockSusD
     economiaFinanceiraEstimada: Number(summary?.economiaFinanceiraEstimada ?? 0),
     custoTotalEncaminhamentos: Number(summary?.custoTotalEncaminhamentos ?? 0),
     custoMedioConsultaEspecializada: 0,
+    mesAnterior: {
+      encaminhados: summary?.mesAnterior?.encaminhados ?? 0,
+      consultasEvitadas: summary?.mesAnterior?.consultasEvitadas ?? 0,
+      custoTotalEncaminhamentos: Number(summary?.mesAnterior?.custoTotalEncaminhamentos ?? 0),
+    },
+    mesAtual: {
+      encaminhados: summary?.mesAtual?.encaminhados ?? 0,
+      consultasEvitadas: summary?.mesAtual?.consultasEvitadas ?? 0,
+      custoTotalEncaminhamentos: Number(summary?.mesAtual?.custoTotalEncaminhamentos ?? 0),
+    },
     taxaEncaminhamento: Number(summary?.taxaEncaminhamento ?? 0),
     taxaComparecimento: 0,
     taxaDiagnosticoConfirmado: 0,

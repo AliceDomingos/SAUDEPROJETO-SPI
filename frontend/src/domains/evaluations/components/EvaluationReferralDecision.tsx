@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Send, XCircle } from 'lucide-react';
+import { CheckCircle2, Plus, Send, XCircle } from 'lucide-react';
 import { saveEvaluationReferral } from '@/domains/dashboard/api';
 import type { EvaluationReferral } from '@/types';
-import { getSpecialists } from '@/domains/specialists/api';
+import { createSpecialist, getSpecialists } from '@/domains/specialists/api';
 import type { Specialist } from '@/domains/specialists/types';
 import { formatCurrency } from '@/domains/specialists/components/utils/specialistUtils';
+import SpecialistCreateDialog from '@/domains/specialists/components/dialogs/SpecialistCreateDialog';
 
 interface EvaluationReferralDecisionProps {
   evaluationId?: string;
@@ -19,6 +20,7 @@ export default function EvaluationReferralDecision({ evaluationId, currentReferr
   const [loadingSpecialists, setLoadingSpecialists] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [createSpecialistOpen, setCreateSpecialistOpen] = useState(false);
 
   useEffect(() => {
     const loadSpecialists = async () => {
@@ -35,6 +37,13 @@ export default function EvaluationReferralDecision({ evaluationId, currentReferr
 
     loadSpecialists();
   }, []);
+
+  const handleCreateSpecialist = async (data: Parameters<typeof createSpecialist>[0]) => {
+    const created = await createSpecialist(data);
+    setSpecialists((current) => [...current, created]);
+    setSelectedSpecialistId(created.id);
+    setCreateSpecialistOpen(false);
+  };
 
   const handleSave = async (encaminhado: boolean) => {
     if (!evaluationId) {
@@ -80,7 +89,17 @@ export default function EvaluationReferralDecision({ evaluationId, currentReferr
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Especialista</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Especialista</p>
+            <button
+              type="button"
+              onClick={() => setCreateSpecialistOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg border border-dashed border-blue-300 px-2 py-1 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Novo especialista
+            </button>
+          </div>
           {loadingSpecialists ? (
             <div className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm text-gray-500">
               Carregando especialistas...
@@ -139,6 +158,12 @@ export default function EvaluationReferralDecision({ evaluationId, currentReferr
       ) : null}
       {referral && !referral.encaminhado ? <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">Avaliacao registrada sem encaminhamento.</div> : null}
       {error ? <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600">{error}</div> : null}
+
+      <SpecialistCreateDialog
+        open={createSpecialistOpen}
+        onClose={() => setCreateSpecialistOpen(false)}
+        onSubmit={handleCreateSpecialist}
+      />
     </div>
   );
 }

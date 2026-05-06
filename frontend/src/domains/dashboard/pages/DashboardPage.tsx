@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, Banknote, CalendarDays, CheckCircle2, ClipboardList, Filter, Route, Sparkles, TrendingUp, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, Banknote, CalendarDays, CheckCircle2, ClipboardList, Filter, Route, Sparkles, TrendingUp, X } from 'lucide-react';
 import { getDashboardGroups, getDashboardStats, type DashboardFilter, type SpiMockSusDashboard } from '../api';
 import { DistributionDonut, HorizontalBars, MonthlyBars } from '../components/DashboardCharts';
 import PeriodFilter, { type PeriodSelection } from '../components/PeriodFilter';
@@ -307,22 +307,31 @@ export default function DashboardPage() {
       </div>
 
       <SectionTitle title="Encaminhamentos" tone="purple" />
-      <StatsCards
-        columnsClassName="grid-cols-1"
-        items={[
-          {
-            icon: Route,
-            label: 'Total encaminhadas',
-            value: stats.encaminhados.toLocaleString('pt-BR'),
-            secondaryLabel: 'Das triadas',
-            secondaryValue: formatPercent(stats.taxaEncaminhamento),
-            progressValue: stats.taxaEncaminhamento,
-            tone: 'blue',
-            tag: 'KPI 07',
-            foot: `${stats.encaminhados.toLocaleString('pt-BR')} de ${stats.totalTriagens.toLocaleString('pt-BR')} pacientes triados foram encaminhados`,
-          },
-        ]}
-      />
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <StatsCards
+          columnsClassName="grid-cols-1"
+          items={[
+            {
+              icon: Route,
+              label: 'Total encaminhadas',
+              value: stats.encaminhados.toLocaleString('pt-BR'),
+              secondaryLabel: 'Das triadas',
+              secondaryValue: formatPercent(stats.taxaEncaminhamento),
+              progressValue: stats.taxaEncaminhamento,
+              tone: 'blue',
+              tag: 'KPI 07',
+              foot: `${stats.encaminhados.toLocaleString('pt-BR')} de ${stats.totalTriagens.toLocaleString('pt-BR')} pacientes triados foram encaminhados`,
+            },
+          ]}
+        />
+        <ImpactCard
+          icon={CheckCircle2}
+          title="KPI 10 - Consultas especializadas evitadas"
+          value={`${stats.consultasEvitadas.toLocaleString('pt-BR')} consultas evitadas`}
+          subtitle="Sem triagem, todo paciente iria direto ao especialista."
+          detail={`${stats.totalTriagens.toLocaleString('pt-BR')} triadas - ${stats.encaminhados.toLocaleString('pt-BR')} encaminhadas = ${stats.consultasEvitadas.toLocaleString('pt-BR')} evitadas`}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-5">
         <ChartCard title="Destino do encaminhamento" subtitle="Clique em uma especialidade para priorizar esse recorte">
@@ -337,19 +346,16 @@ export default function DashboardPage() {
       <SectionTitle title="Impacto Econômico" tone="amber" />
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <ImpactCard
-          icon={CheckCircle2}
-          title="KPI 10 - Consultas especializadas evitadas"
-          value={`${stats.consultasEvitadas.toLocaleString('pt-BR')} consultas evitadas`}
-          subtitle="Sem triagem, todo paciente iria direto ao especialista."
-          detail={`${stats.totalTriagens.toLocaleString('pt-BR')} triadas - ${stats.encaminhados.toLocaleString('pt-BR')} encaminhadas = ${stats.consultasEvitadas.toLocaleString('pt-BR')} evitadas`}
-        />
-        <ImpactCard
           icon={Banknote}
           title="KPI 11 - Custo estimado com encaminhamentos"
           value={formatCurrency(stats.custoTotalEncaminhamentos)}
           subtitle="Soma dos valores dos especialistas indicados no período."
           detail="Considera apenas avaliações salvas com paciente encaminhado."
           tone="green"
+        />
+        <ComparativoMesCard
+          mesAtual={stats.mesAtual.custoTotalEncaminhamentos}
+          mesAnterior={stats.mesAnterior.custoTotalEncaminhamentos}
         />
       </div>
 
@@ -426,6 +432,36 @@ function ChartCard({ title, subtitle, children }: { title: string; subtitle: str
       <h3 className="text-sm font-extrabold text-gray-900">{title}</h3>
       <p className="mb-4 text-xs font-medium text-gray-500">{subtitle}</p>
       {children}
+    </div>
+  );
+}
+
+function ComparativoMesCard({ mesAtual, mesAnterior }: { mesAtual: number; mesAnterior: number }) {
+  const diff = mesAtual - mesAnterior;
+  const subiu = diff > 0;
+  const igual = diff === 0;
+  const diffLabel = igual ? 'Igual ao mês anterior' : `${formatCurrency(Math.abs(diff))} ${subiu ? 'a mais' : 'a menos'} que o mês anterior`;
+  const Arrow = subiu ? ArrowUp : ArrowDown;
+  const arrowColor = subiu ? 'text-red-500' : 'text-emerald-500';
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-extrabold text-gray-900">KPI 12 - Comparativo mês anterior</h3>
+      <p className="mb-4 text-xs font-medium text-gray-500">Evolução do custo com encaminhamentos em relação ao mês anterior.</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+          <span className="text-xs font-semibold text-gray-500">Mês anterior</span>
+          <span className="text-sm font-bold text-gray-700">{formatCurrency(mesAnterior)}</span>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3">
+          <span className="text-xs font-semibold text-blue-700">Mês atual</span>
+          <span className="text-sm font-extrabold text-blue-900">{formatCurrency(mesAtual)}</span>
+        </div>
+        <div className={`flex items-center gap-2 rounded-lg px-4 py-3 ${igual ? 'bg-gray-50' : subiu ? 'bg-red-50' : 'bg-emerald-50'}`}>
+          {!igual && <Arrow className={`h-4 w-4 shrink-0 ${arrowColor}`} />}
+          <span className={`text-xs font-bold ${igual ? 'text-gray-500' : subiu ? 'text-red-600' : 'text-emerald-600'}`}>{diffLabel}</span>
+        </div>
+      </div>
     </div>
   );
 }
