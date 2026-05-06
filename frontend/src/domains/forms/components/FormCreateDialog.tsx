@@ -29,8 +29,8 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
   const [descricao, setDescricao] = useState('');
   const [groupId, setGroupId] = useState<string>('');
   const [perguntas, setPerguntas] = useState<FormQuestion[]>([emptyQuestion()]);
-  const [faixas, setFaixas] = useState<FaixaClassificacao[]>([]);
-  const [usarClassificacaoPadrao, setUsarClassificacaoPadrao] = useState(false);
+  const [faixas, setFaixas] = useState<FaixaClassificacao[]>(FAIXAS_PADRAO_CARS);
+  const [usarClassificacaoPadrao, setUsarClassificacaoPadrao] = useState(true);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -51,8 +51,8 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
       setDescricao('');
       setGroupId('');
       setPerguntas([emptyQuestion()]);
-      setFaixas([]);
-      setUsarClassificacaoPadrao(false);
+      setFaixas(FAIXAS_PADRAO_CARS);
+      setUsarClassificacaoPadrao(true);
       setError('');
     } else if (initialData) {
       setNome(initialData.nome);
@@ -65,7 +65,8 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
           opcoes: p.opcoes ?? [],
         }))
       );
-      setFaixas([]);
+      setFaixas(FAIXAS_PADRAO_CARS);
+      setUsarClassificacaoPadrao(true);
       setError('');
     }
   }, [isOpen]);
@@ -406,7 +407,7 @@ export default function FormCreateDialog({ isOpen, onClose, onCreated, initialDa
               onChange={(e) => toggleClassificacaoPadrao(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Usar classificação padrão (CARS-BR)</span>
+            <span className="text-sm text-gray-700">Usar classificação padrão</span>
           </label>
 
           {faixas.length === 0 ? (
